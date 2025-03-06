@@ -8,9 +8,21 @@
 import SwiftUI
 
 struct SceneView: View {
+    
+    @Environment(\.colorScheme) var colorScheme
+        
+        // Computed property for the toolbar background color
+        var toolbarBackground: Color {
+            colorScheme == .dark ? Color(hex: "222222") : Color(hex: "cecece")
+        }
+        
+        // Computed property for the scene background color
+        var sceneBackground: Color {
+            colorScheme == .dark ? Color(hex: "171717") : Color(hex: "f1f1f1")
+        }
+    
     var body: some View {
         VStack(spacing: 0) {
-            
             // Toolbar Section
             HStack {
                 Spacer()
@@ -21,17 +33,17 @@ struct SceneView: View {
                 Spacer()
             }
             .frame(height: 50)
-            .background(Color(UIColor.secondarySystemBackground))
+            .background(toolbarBackground)
             
             // Body Section
             ZStack {
                 AudioCellButton(action: {
                     print("Audio cell toggled!")
-                }, accentColor: Color(UIColor.secondarySystemBackground))
+                }, accentColor: Color(.secondarySystemBackground))
                 .padding()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(UIColor.systemBackground))
+            .background(sceneBackground)
         }
         .edgesIgnoringSafeArea(.top)
     }
@@ -42,5 +54,11 @@ struct SceneView_Previews: PreviewProvider {
         SceneView()
             .previewDevice("iPad Pro (12.9-inch) (5th generation)")
             .previewInterfaceOrientation(.landscapeRight)
+            .preferredColorScheme(.light)
+        
+        SceneView()
+            .previewDevice("iPad Pro (12.9-inch) (5th generation)")
+            .previewInterfaceOrientation(.landscapeRight)
+            .preferredColorScheme(.dark)
     }
 }
