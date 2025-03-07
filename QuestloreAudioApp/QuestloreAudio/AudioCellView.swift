@@ -7,15 +7,18 @@
 
 import SwiftUI
 
+struct AudioCellData: Identifiable {
+    let id = UUID()
+    let audio: String
+    let label: String
+    let accentColor: Color
+}
+
 struct AudioCell: View {
     // The action to perform when the button is tapped.
     let action: () -> Void
-    // The audio triggered by the cell.
-    let audio: String
-    // The label of the cell.
-    let label: String
-    // The background color of the cell.
-    let accentColor: Color
+    // The unique cell data
+    let cellData: AudioCellData
     
     // Detect the device theme
     @Environment(\.colorScheme) var colorScheme
@@ -29,10 +32,10 @@ struct AudioCell: View {
     var body: some View {
         Button(action: {
             action()
-            AudioManager.shared.playAudio(for: audio)
+            AudioManager.shared.playAudio(for: cellData.audio)
         }) {
-            Text(label)
-                .foregroundColor(accentColor)
+            Text(cellData.label)
+                .foregroundColor(cellData.accentColor)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         // Use PlainButtonStyle to avoid default button styling.
@@ -49,14 +52,14 @@ struct AudioCellButton_Previews: PreviewProvider {
         Group {
             AudioCell(action: {
                 print("Audio cell toggled!")
-            }, audio: "", label: "Test", accentColor: .blue)
+            }, cellData: AudioCellData(audio: "", label: "Test", accentColor: .blue))
             .previewLayout(.sizeThatFits)
             .preferredColorScheme(.light)
             .padding()
             
             AudioCell(action: {
                 print("Audio cell toggled!")
-            }, audio: "", label: "Test", accentColor: .blue)
+            }, cellData: AudioCellData(audio: "", label: "Test", accentColor: .blue))
             .previewLayout(.sizeThatFits)
             .preferredColorScheme(.dark)
             .padding()
