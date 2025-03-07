@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+let globalSpacing = 16.0
+
 struct SceneView: View {
     
     @Environment(\.colorScheme) var colorScheme
@@ -35,18 +37,25 @@ struct SceneView: View {
             .frame(height: 50)
             .background(toolbarBackground)
             
+            let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 10)
+            
             // Body Section
             ZStack {
-                AudioCellButton(action: {
-                    print("Audio cell toggled!")
-                }, accentColor: Color(.secondarySystemBackground))
-                .padding()
+                LazyVGrid (columns: columns, spacing: globalSpacing) {
+                    ForEach(0..<100, id: \.self) { index in
+                            AudioCell(action: {
+                                print("Audio cell \(index) toggled!")
+                            }, audio: "", label: "Test", accentColor: .blue)
+                        }
+                }
             }
+            .padding(globalSpacing)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(sceneBackground)
         }
-        .edgesIgnoringSafeArea(.top)
+        .edgesIgnoringSafeArea(.all)
     }
+        
 }
 
 struct SceneView_Previews: PreviewProvider {

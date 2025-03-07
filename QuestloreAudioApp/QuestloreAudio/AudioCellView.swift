@@ -7,9 +7,13 @@
 
 import SwiftUI
 
-struct AudioCellButton: View {
+struct AudioCell: View {
     // The action to perform when the button is tapped.
     let action: () -> Void
+    // The audio triggered by the cell.
+    let audio: String
+    // The label of the cell.
+    let label: String
     // The background color of the cell.
     let accentColor: Color
     
@@ -21,36 +25,38 @@ struct AudioCellButton: View {
         colorScheme == .dark ? Color(hex: "222222") : Color.white
     }
 
+    // Build the cell.
     var body: some View {
-        Button(action: action) {
-            // Using an empty text label; you can add additional content if needed.
-            Text("")
+        Button(action: {
+            action()
+            AudioManager.shared.playAudio(for: audio)
+        }) {
+            Text(label)
+                .foregroundColor(accentColor)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         // Use PlainButtonStyle to avoid default button styling.
         .buttonStyle(PlainButtonStyle())
-        // Set the aspect ratio to 1.66:1 (width to height).
         .aspectRatio(1.66, contentMode: .fit)
         .background(backgroundColor)
-        // Rounded corners for a softer look.
         .cornerRadius(12)
     }
 }
 
 struct AudioCellButton_Previews: PreviewProvider {
     static var previews: some View {
-        // Preview in both light and dark mode for demonstration
+        // Preview in both light and dark mode for demonstration.
         Group {
-            AudioCellButton(action: {
+            AudioCell(action: {
                 print("Audio cell toggled!")
-            }, accentColor: .blue)
+            }, audio: "", label: "Test", accentColor: .blue)
             .previewLayout(.sizeThatFits)
             .preferredColorScheme(.light)
             .padding()
             
-            AudioCellButton(action: {
+            AudioCell(action: {
                 print("Audio cell toggled!")
-            }, accentColor: .blue)
+            }, audio: "", label: "Test", accentColor: .blue)
             .previewLayout(.sizeThatFits)
             .preferredColorScheme(.dark)
             .padding()
@@ -58,7 +64,7 @@ struct AudioCellButton_Previews: PreviewProvider {
     }
 }
 
-// Extension to create a Color from a hex string
+// Extension to create a Color from a hex string.
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
