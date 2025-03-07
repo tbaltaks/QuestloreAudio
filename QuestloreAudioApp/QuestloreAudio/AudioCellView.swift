@@ -15,10 +15,14 @@ struct AudioCellData: Identifiable {
 }
 
 struct AudioCell: View {
-    // The action to perform when the button is tapped.
-    let action: () -> Void
     // The unique cell data
     let cellData: AudioCellData
+    
+    // The action to callback when the button is tapped.
+    let action: () -> Void
+    
+    // Local state to track if the cell is currently playing audio.
+    @State private var isPlaying: Bool = false
     
     // Detect the device theme
     @Environment(\.colorScheme) var colorScheme
@@ -29,20 +33,37 @@ struct AudioCell: View {
     }
 
     // Build the cell.
-    var body: some View {
-        Button(action: {
-            action()
-            AudioManager.shared.playAudio(for: cellData.audio)
-        }) {
+    var body: some View
+    {
+        Button(action:
+            {
+                // Perform action
+                action()
+                
+                // Toggle playback: if playing, fade out; if not, fade in.
+                if isPlaying
+                {
+                    AudioManager.shared.stopAudio(for: cellData.audio)
+                }
+                else
+                {
+                    AudioManager.shared.playAudio(for: cellData.audio)
+                }
+                isPlaying.toggle()
+            })
+        {
+            Spacer()
             Text(cellData.label)
                 .foregroundColor(cellData.accentColor)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            Spacer()
         }
         // Use PlainButtonStyle to avoid default button styling.
         .buttonStyle(PlainButtonStyle())
         .aspectRatio(1.66, contentMode: .fit)
         .background(backgroundColor)
         .cornerRadius(12)
+        .contentShape(Rectangle())
     }
 }
 
@@ -50,16 +71,12 @@ struct AudioCellButton_Previews: PreviewProvider {
     static var previews: some View {
         // Preview in both light and dark mode for demonstration.
         Group {
-            AudioCell(action: {
-                print("Audio cell toggled!")
-            }, cellData: AudioCellData(audio: "", label: "Test", accentColor: .blue))
+            AudioCell(cellData: AudioCellData(audio: "", label: "Test", accentColor: .blue), action: { print("Audio cell toggled!") })
             .previewLayout(.sizeThatFits)
             .preferredColorScheme(.light)
             .padding()
             
-            AudioCell(action: {
-                print("Audio cell toggled!")
-            }, cellData: AudioCellData(audio: "", label: "Test", accentColor: .blue))
+            AudioCell(cellData: AudioCellData(audio: "", label: "Test", accentColor: .blue), action: { print("Audio cell toggled!") })
             .previewLayout(.sizeThatFits)
             .preferredColorScheme(.dark)
             .padding()

@@ -27,20 +27,10 @@ struct SceneView: View
     
     // Array of sample cell data.
     let allCellData: [AudioCellData] = [
-        AudioCellData(audio: "audio1.mp3", label: "Cell 1", accentColor: .blue),
-        AudioCellData(audio: "audio2.mp3", label: "Cell 2", accentColor: .red),
-        AudioCellData(audio: "audio3.mp3", label: "Cell 3", accentColor: .green),
-        AudioCellData(audio: "audio4.mp3", label: "Cell 4", accentColor: .orange)
-    ]
-    
-    let audioFiles =
-    [
-        "Building_Interior_Music.mp3", "Dungeon_Ambience.mp3", "Mystic_Desert_Music.mp3", "Log_Fire_Ambience.mp3"
-    ]
-    
-    let labels =
-    [
-        "Building Interior Music", "Dungeon Ambience", "Mystic Desert Music", "Log Fire Ambience"
+        AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+        AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .red),
+        AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .green),
+        AudioCellData(audio: "Log_Fire_Ambience.mp3", label: "Log Fire Ambience", accentColor: .orange)
     ]
     
     var body: some View
@@ -59,7 +49,7 @@ struct SceneView: View
             .frame(height: 50)
             .background(toolbarBackground)
             
-            let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 10)
+            let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 2)
             
             // Body Section
             ZStack
@@ -68,7 +58,9 @@ struct SceneView: View
                 {
                     ForEach(allCellData)
                     { cellData in
-                        AudioCell(action: { print("Playing \(cellData.audio)") }, cellData: cellData)
+                        AudioCell(
+                            cellData: cellData,
+                            action: { print("Playing \(cellData.audio)") })
                     }
                 }
             }

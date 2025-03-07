@@ -35,8 +35,25 @@ class AudioManager: ObservableObject {
         }
     }
     
+    // Stop an audio file with a fade-out effect.
+    func stopAudio(for audioFileName: String)
+    {
+        guard let player = players[audioFileName] else
+        {
+            print("No audio is playing for \(audioFileName)")
+            return
+        }
+        
+        fade(player: player, toVolume: 0.0, duration: 2.0)
+        {
+            player.stop()
+            self.players.removeValue(forKey: audioFileName)
+        }
+    }
+    
     // Simple fade function using Timer.
-    private func fade(player: AVAudioPlayer, toVolume targetVolume: Float, duration: TimeInterval) {
+    private func fade(player: AVAudioPlayer, toVolume targetVolume: Float, duration: TimeInterval, completion: (() -> Void)? = nil)
+    {
         let steps = 50
         let stepDuration = duration / Double(steps)
         let volumeDelta = (targetVolume - player.volume) / Float(steps)
@@ -48,6 +65,7 @@ class AudioManager: ObservableObject {
                 currentStep += 1
             } else {
                 timer.invalidate()
+                completion?()
             }
         }
     }
