@@ -52,18 +52,13 @@ struct AudioCell: View {
                 isPlaying.toggle()
             })
         {
-            Spacer()
             Text(cellData.label)
                 .foregroundColor(cellData.accentColor)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            Spacer()
+                .aspectRatio(1.66, contentMode: .fit)
+                .background(backgroundColor)
+                .cornerRadius(16)
         }
-        // Use PlainButtonStyle to avoid default button styling.
-        .buttonStyle(PlainButtonStyle())
-        .aspectRatio(1.66, contentMode: .fit)
-        .background(backgroundColor)
-        .cornerRadius(12)
-        .contentShape(Rectangle())
     }
 }
 
