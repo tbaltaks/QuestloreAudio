@@ -7,14 +7,16 @@
 
 import SwiftUI
 
-struct AudioCellData: Identifiable {
+struct AudioCellData: Identifiable
+{
     let id = UUID()
     let audio: String
     let label: String
     let accentColor: Color
 }
 
-struct AudioCell: View {
+struct AudioCell: View
+{
     // The unique cell data
     let cellData: AudioCellData
     
@@ -28,7 +30,8 @@ struct AudioCell: View {
     @Environment(\.colorScheme) var colorScheme
 
     // Computed property for the background color based on the color scheme.
-    var backgroundColor: Color {
+    var backgroundColor: Color
+    {
         colorScheme == .dark ? Color(hex: "222222") : Color.white
     }
 
@@ -62,10 +65,14 @@ struct AudioCell: View {
     }
 }
 
-struct AudioCellButton_Previews: PreviewProvider {
-    static var previews: some View {
+
+struct AudioCellButton_Previews: PreviewProvider
+{
+    static var previews: some View
+    {
         // Preview in both light and dark mode for demonstration.
-        Group {
+        Group
+        {
             AudioCell(cellData: AudioCellData(audio: "", label: "Test", accentColor: .blue), action: { print("Audio cell toggled!") })
             .previewLayout(.sizeThatFits)
             .preferredColorScheme(.light)
@@ -79,14 +86,19 @@ struct AudioCellButton_Previews: PreviewProvider {
     }
 }
 
+
 // Extension to create a Color from a hex string.
-extension Color {
-    init(hex: String) {
+extension Color
+{
+    init(hex: String)
+    {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)
         let a, r, g, b: UInt64
-        switch hex.count {
+        
+        switch hex.count
+        {
         case 3: // RGB (12-bit)
             (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
         case 6: // RGB (24-bit)
@@ -96,6 +108,7 @@ extension Color {
         default:
             (a, r, g, b) = (255, 0, 0, 0)
         }
+        
         self.init(
             .sRGB,
             red: Double(r) / 255,
