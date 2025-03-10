@@ -47,9 +47,8 @@ class AudioManager {
         handler.fadeTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { timer in
             let elapsed = CACurrentMediaTime() - startTime
             let t = Float(min(elapsed / duration, 1.0))
-            let isFadingIn = targetVolume == 1 ? true : false
-            let eased = self.missKCurve(t, isFadingIn: isFadingIn)
-            let newVolume = startVolume + (targetVolume - startVolume) * Float(eased)
+            let easedT = self.missKCurve(t, isFadingIn: targetVolume != 0)
+            let newVolume = startVolume + (targetVolume - startVolume) * easedT
             handler.player.volume = newVolume
             
             if t >= 1.0 {
@@ -62,10 +61,22 @@ class AudioManager {
     }
     
     // MARK: Easing helper functions
-    private func missKCurve(_ t: Float, isFadingIn: Bool) -> Float {
-        let translator: Float = isFadingIn ? 0 : 1
-        let t = pow(t - translator, 3.6) * (2.8 - 1.8 * pow(t - translator, 2)) + translator
-        return isFadingIn ? t : -t
+    
+    private func missKCurve(_ t: Float, isFadingIn: Bool) -> Float
+    {
+        var newT: Float
+
+        if isFadingIn
+        {
+            newT = pow(t, 3.6) * (2.8 - 1.8 * pow(t, 2))
+        }
+        else
+        {
+//            newT = -(pow(abs(t - 1), 3.6)) * (2.8 - 1.8 * pow(abs(t - 1), 2)) + 1
+            newT = pow(t, 2.5) * (3 - 2 * pow(t, 1.25))
+        }
+
+        return newT
     }
     
     private func fadeInCurve(_ t: Float) -> Float {
