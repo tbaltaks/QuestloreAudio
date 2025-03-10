@@ -26,7 +26,7 @@ class AudioPlaybackHandler {
 class AudioManager {
     static let shared = AudioManager()
     
-    // Fade duration in seconds
+    // MARK: Fade duration in seconds
     let fadeDuration: TimeInterval = 4.0
     
     // Dictionary mapping an audio file's name to its playback handler.

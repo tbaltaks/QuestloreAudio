@@ -25,13 +25,22 @@ struct SceneView: View
         colorScheme == .dark ? Color(hex: "171717") : Color(hex: "f1f1f1")
     }
     
-    // Array of sample cell data.
-    let allCellData: [AudioCellData] = [
-        AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-        AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .red),
-        AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .green),
-        AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange)
-    ]
+    @ObservedObject var gridModel: AudioGridModel
+    
+    init()
+    {
+        // Array of cell data.
+        let allCellData: [AudioCellData] = [
+            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .red),
+            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .green),
+            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange)
+        ]
+        
+        gridModel = AudioGridModel(cellDataArray: allCellData)
+    }
+    
+    let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 2)
     
     var body: some View
     {
@@ -49,18 +58,18 @@ struct SceneView: View
             .frame(height: 50)
             .background(toolbarBackground)
             
-            let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 2)
-            
             // Body Section
             ZStack
             {
                 LazyVGrid (columns: columns, spacing: globalSpacing)
                 {
-                    ForEach(allCellData)
-                    { cellData in
+                    ForEach(gridModel.cells)
+                    { cellModel in
                         AudioCell(
-                            cellData: cellData,
-                            action: { print("Playing \(cellData.audio)") })
+                            cellModel: cellModel,
+                            onToggle: { gridModel.toggleCell(cellModel) },
+                            onSolo: { gridModel.soloCell(cellModel) }
+                        )
                     }
                 }
             }
