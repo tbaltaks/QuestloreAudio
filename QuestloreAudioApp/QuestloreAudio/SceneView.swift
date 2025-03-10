@@ -30,7 +30,7 @@ struct SceneView: View
         AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
         AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .red),
         AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .green),
-        AudioCellData(audio: "Log_Fire_Ambience.mp3", label: "Log Fire Ambience", accentColor: .orange)
+        AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange)
     ]
     
     var body: some View
