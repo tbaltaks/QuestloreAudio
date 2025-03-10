@@ -5,29 +5,83 @@
 //  Created by Tom Baltaks on 7/3/2025.
 //
 
-import Foundation
 import AVFoundation
+import Foundation
+import QuartzCore // For CACurrentMediaTime
 
-class AudioManager: ObservableObject {
+// Wrap an AVAudioPlayer along with its active fade timer.
+class AudioPlaybackHandler {
+    let player: AVAudioPlayer
+    var fadeTimer: Timer?
+    
+    init(player: AVAudioPlayer) {
+        self.player = player
+    }
+    
+    deinit {
+        fadeTimer?.invalidate()
+    }
+}
+
+class AudioManager {
     static let shared = AudioManager()
     
-    // Store players keyed by their audio file name.
-    var players: [String: AVAudioPlayer] = [:]
-    // Store fade timers keyed by their audio file name.
-    var fadeTimers: [String: Timer] = [:]
+    // Fade duration in seconds
+    let fadeDuration: TimeInterval = 4.0
     
+    // Dictionary mapping an audio file's name to its playback handler.
+    var players: [String: AudioPlaybackHandler] = [:]
     
-    // Play audio for a given file name.
+    private init() {}
+    
+    // MARK: - Fade Logic
+    // Fades the player's volume to a target value over the given duration using a smooth ease.
+    private func fade(handler: AudioPlaybackHandler, toVolume targetVolume: Float, duration: TimeInterval, completion: (() -> Void)? = nil) {
+        let startVolume = handler.player.volume
+        let startTime = CACurrentMediaTime()
+        
+        // Cancel any existing fade.
+        handler.fadeTimer?.invalidate()
+        
+        // Initiate timer (with interval 0.01s)
+        handler.fadeTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { timer in
+            let elapsed = CACurrentMediaTime() - startTime
+            let t = Float(min(elapsed / duration, 1.0))
+            let eased = self.easeInOutQuad(t)
+            let newVolume = startVolume + (targetVolume - startVolume) * Float(eased)
+            handler.player.volume = newVolume
+            
+            if t >= 1.0 {
+                timer.invalidate()
+                handler.fadeTimer = nil
+                handler.player.volume = targetVolume
+                completion?()
+            }
+        }
+    }
+    
+    // MARK: Easing helper functions
+    private func fadeInCurve(_ t: Float) -> Float {
+        return 2.1 * pow(t, 2) - 1.1 * t
+    }
+    
+    private func easeInOutQuad(_ t: Float) -> Float {
+        return t < 0.5 ? 2 * t * t : 1 - pow(-2 * t + 2, 2) / 2
+    }
+
+    private func smoothStep(_ t: Float) -> Float {
+        return t * t * (3 - 2 * t)
+    }
+    
+    // MARK: - Audio Control
+    // Plays an audio file (by name) with a fade-in effect.
     func playAudio(for audioFileName: String) {
-        // If audio is already fading, cancel fade.
-        if let player = players[audioFileName] {
-                    // Cancel any ongoing fade.
-                    fadeTimers[audioFileName]?.invalidate()
-                    fadeTimers.removeValue(forKey: audioFileName)
-                    // Start fade-in from current volume.
-                    fade(player: player, for: audioFileName, toVolume: 1.0, duration: 2.0)
-                    return
-                }
+        // If we already have a player for this file, cancel any fade-out and fade in.
+        if let handler = players[audioFileName] {
+            handler.fadeTimer?.invalidate()
+            fade(handler: handler, toVolume: 1.0, duration: fadeDuration)
+            return
+        }
         
         // Locate the file in the main bundle.
         guard let url = Bundle.main.url(forResource: audioFileName, withExtension: nil) else {
@@ -38,55 +92,32 @@ class AudioManager: ObservableObject {
         do {
             let player = try AVAudioPlayer(contentsOf: url)
             player.volume = 0.0
+            // Loop indefinitely.
+            player.numberOfLoops = -1
             player.prepareToPlay()
             player.play()
-            players[audioFileName] = player
             
-            fade(player: player, for: audioFileName, toVolume: 1.0, duration: 2.0)
+            let handler = AudioPlaybackHandler(player: player)
+            players[audioFileName] = handler
+            
+            fade(handler: handler, toVolume: 1.0, duration: fadeDuration)
         } catch {
             print("Error playing audio: \(error)")
         }
     }
     
-    
-    // Stop an audio file with a fade-out effect.
-    func stopAudio(for audioFileName: String)
-    {
-        guard let player = players[audioFileName] else
-        {
+    // Stops an audio file (by name) with a fade-out effect.
+    func stopAudio(for audioFileName: String) {
+        guard let handler = players[audioFileName] else {
             print("No audio is playing for \(audioFileName)")
             return
         }
         
-        fade(player: player ,for: audioFileName, toVolume: 0.0, duration: 2.0)
-        {
-            player.stop()
+        // Cancel any ongoing fade before starting the fade-out.
+        handler.fadeTimer?.invalidate()
+        fade(handler: handler, toVolume: 0.0, duration: fadeDuration) {
+            handler.player.stop()
             self.players.removeValue(forKey: audioFileName)
         }
-    }
-    
-    
-    // The fade function now takes an extra parameter (for audioFileName) so we can manage the corresponding timer.
-    private func fade(player: AVAudioPlayer, for audioFileName: String, toVolume targetVolume: Float, duration: TimeInterval, completion: (() -> Void)? = nil)
-    {
-        let steps = 50
-        let stepDuration = duration / Double(steps)
-        let volumeDelta = (targetVolume - player.volume) / Float(steps)
-        var currentStep = 0
-        
-        // Cancel any existing fade timer for this file.
-        fadeTimers[audioFileName]?.invalidate()
-        
-        let timer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) { timer in
-            if currentStep < steps {
-                player.volume += volumeDelta
-                currentStep += 1
-            } else {
-                timer.invalidate()
-                self.fadeTimers.removeValue(forKey: audioFileName)
-                completion?()
-            }
-        }
-        fadeTimers[audioFileName] = timer
     }
 }
