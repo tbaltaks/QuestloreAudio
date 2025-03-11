@@ -98,7 +98,7 @@ class AudioGridModel: ObservableObject
     
     func SoloCellActioned(_ cell: AudioCellModel)
     {
-        cell.AnimateBorder(duration: cell.durationToComplete)
+        if (!cell.isActive) { cell.AnimateBorder(duration: cell.durationToComplete) }
         
         for other in cells where other.id != cell.id && other.isActive
         {
@@ -108,7 +108,7 @@ class AudioGridModel: ObservableObject
     
     func SoloCellCancelled(_ cell: AudioCellModel)
     {
-        cell.AnimateBorder(targetFill: 0.0)
+        if (!cell.isActive) { cell.AnimateBorder(targetFill: 0.0) }
         
         for other in cells where other.id != cell.id && other.isActive
         {
