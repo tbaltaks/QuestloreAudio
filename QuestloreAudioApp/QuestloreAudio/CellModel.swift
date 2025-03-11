@@ -20,6 +20,12 @@ class AudioCellModel: ObservableObject, Identifiable
     let id: UUID
     let cellData: AudioCellData
     @Published var isActive: Bool = false
+    
+    @Published var durationToAction: TimeInterval = 0.25
+    @Published var durationToComplete: TimeInterval = 1.0
+    
+    @Published var borderProgress: CGFloat = 0.0
+    @Published var borderInverted: Bool = true
 
     init(cellData: AudioCellData)
     {
@@ -27,8 +33,10 @@ class AudioCellModel: ObservableObject, Identifiable
         self.id = cellData.id
     }
     
-    func toggle()
+    func Toggle()
     {
+        isActive.toggle()
+        
         if isActive
         {
             AudioManager.shared.stopAudio(for: cellData.audio)
@@ -37,24 +45,38 @@ class AudioCellModel: ObservableObject, Identifiable
         {
             AudioManager.shared.playAudio(for: cellData.audio)
         }
-        isActive.toggle()
+        
+        AnimateBorder(startFill: 0.0, isInverted: !isActive)
     }
     
-    func activate()
+    func Activate()
     {
-        if !isActive
+        if isActive { return }
+        
+        isActive = true
+        AudioManager.shared.playAudio(for: cellData.audio)
+    }
+    
+    func Deactivate()
+    {
+        if !isActive { return }
+        
+        isActive = false
+        AudioManager.shared.stopAudio(for: cellData.audio)
+    }
+    
+    
+    func AnimateBorder(startFill: CGFloat = 10.0, targetFill: CGFloat = 1.0, duration: Double = 0.28, isInverted: Bool = false)
+    {
+        withTransaction(Transaction(animation: nil))
         {
-            AudioManager.shared.playAudio(for: cellData.audio)
-            isActive = true
+            borderProgress = startFill == 10.0 ? borderProgress : startFill
+            borderInverted = isInverted
         }
-    }
-    
-    func deactivate()
-    {
-        if isActive
+        
+        withAnimation(.easeInOut(duration: duration))
         {
-            AudioManager.shared.stopAudio(for: cellData.audio)
-            isActive = false
+            borderProgress = targetFill
         }
     }
 }
@@ -69,17 +91,39 @@ class AudioGridModel: ObservableObject
     }
     
     // Toggles a given cell
-    func toggleCell(_ cell: AudioCellModel)
+    func ToggleCell(_ cell: AudioCellModel)
     {
-        cell.toggle()
+        cell.Toggle()
+    }
+    
+    func SoloCellActioned(_ cell: AudioCellModel)
+    {
+        cell.AnimateBorder(duration: cell.durationToComplete)
+        
+        for other in cells where other.id != cell.id && other.isActive
+        {
+            cell.AnimateBorder(startFill: 1.0, targetFill: 0.0, duration: cell.durationToComplete)
+        }
+    }
+    
+    func SoloCellCancelled(_ cell: AudioCellModel)
+    {
+        cell.AnimateBorder(targetFill: 0.0)
+        
+        for other in cells where other.id != cell.id && other.isActive
+        {
+            cell.AnimateBorder(targetFill: 1.0)
+        }
     }
     
     // Solos a given cell
-    func soloCell(_ cell: AudioCellModel)
+    func SoloCell(_ cell: AudioCellModel)
     {
-        cell.activate() // Ensure this cell is active
-        for other in cells where other.id != cell.id && other.isActive {
-            other.deactivate()
+        cell.Activate() // Ensure this cell is active
+        
+        for other in cells where other.id != cell.id && other.isActive
+        {
+            other.Deactivate()
         }
     }
 }

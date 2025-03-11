@@ -13,11 +13,9 @@ struct AudioCell: View
     
     // Callbacks provided by the parent (AudioGridModel)
     var onToggle: (() -> Void)? = nil
+    var onSoloActioned: (() -> Void)? = nil
+    var onSoloCancelled: (() -> Void)? = nil
     var onSolo: (() -> Void)? = nil
-    
-    // MARK: - Gesture Thresholds (in seconds)
-    let durationToAction: TimeInterval = 0.25
-    let durationToComplete: TimeInterval = 1.0
     
     //Gesture Timing States
     @State private var pressStartTime: Date? = nil
@@ -27,9 +25,6 @@ struct AudioCell: View
     
     // Detect the device theme
     @Environment(\.colorScheme) var colorScheme
-    
-    @State private var borderProgress: CGFloat = 0
-    @State private var borderIsClockwise: Bool = true
     
     // Computed property for the background color based on the color scheme.
     var backgroundColor: Color
@@ -58,15 +53,15 @@ struct AudioCell: View
                     isPointerDown = true
                     
                     // After durationToAction, if still pressed, mark as slow tap actioned
-                    DispatchQueue.main.asyncAfter(deadline: .now() + durationToAction)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + cellModel.durationToAction)
                     {
                         if isPointerDown && !isSlowTapActioned
                         {
                             isSlowTapActioned = true
-                            // (Optionally, trigger visual feedback here, e.g. fill border)
+                            onSoloActioned?()
                             
                             // After additional durationToComplete, if still pressed, complete slow tap
-                            DispatchQueue.main.asyncAfter(deadline: .now() + durationToComplete)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + cellModel.durationToComplete)
                             {
                                 if isPointerDown && isSlowTapActioned && !isSlowTapCompleted
                                 {
@@ -87,23 +82,11 @@ struct AudioCell: View
                 {
                     // Quick tap detected: toggle cell
                     onToggle?()
-                    
-                    withTransaction(Transaction(animation: nil))
-                    {
-                        borderProgress = 0.0
-                        borderIsClockwise = cellModel.isActive
-                    }
-
-                    // Animate border: Quick
-                    withAnimation(.easeInOut(duration: 0.28)) {
-                        borderProgress = 1.0
-                    }
                 }
                 else if isSlowTapActioned && !isSlowTapCompleted
                 {
-                    // Slow tap was actioned but not fully completed;
-                    // In the JS code, this would reset any border fill.
-                    // For now, we simply do nothing extra.
+                    // Slow tap was cancelled
+                    onSoloCancelled?()
                 }
                 
                 // Reset gesture state
@@ -117,24 +100,11 @@ struct AudioCell: View
         .cornerRadius(12)
         .overlay(CellBorder(
                 color: cellModel.cellData.accentColor,
-                progress: borderProgress,
-                isClockwise: borderIsClockwise
+                progress: cellModel.borderProgress,
+                isInverted: cellModel.borderInverted
             )
             .allowsHitTesting(false)
         )
-        .onAppear()
-        {
-            withTransaction(Transaction(animation: nil))
-            {
-                borderProgress = 0.0
-                borderIsClockwise = true
-            }
-
-            // Animate border: Quick
-            withAnimation(.easeInOut(duration: 0.28)) {
-                borderProgress = 1.0
-            }
-        }
     }
 }
 
@@ -151,7 +121,7 @@ struct CellBorder: View, Animatable
     
     // Progress and direction condtion of fill
     var progress: CGFloat
-    var isClockwise: Bool
+    var isInverted: Bool
     
     var animatableData: CGFloat {
             get { progress }
@@ -160,7 +130,7 @@ struct CellBorder: View, Animatable
     
     private var animatedStops: [Gradient.Stop]
     {
-        if isClockwise
+        if !isInverted
         {
             return [
                 .init(color: color, location: 0),

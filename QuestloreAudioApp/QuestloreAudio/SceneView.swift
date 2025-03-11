@@ -68,8 +68,10 @@ struct SceneView: View
                     { cellModel in
                         AudioCell(
                             cellModel: cellModel,
-                            onToggle: { gridModel.toggleCell(cellModel) },
-                            onSolo: { gridModel.soloCell(cellModel) }
+                            onToggle: { gridModel.ToggleCell(cellModel) },
+                            onSoloActioned: { gridModel.SoloCellActioned(cellModel) },
+                            onSoloCancelled: { gridModel.SoloCellCancelled(cellModel) },
+                            onSolo: { gridModel.SoloCell(cellModel) }
                         )
                     }
                 }
