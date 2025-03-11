@@ -25,7 +25,7 @@ class AudioCellModel: ObservableObject, Identifiable
     @Published var durationToComplete: TimeInterval = 1.0
     
     @Published var borderProgress: CGFloat = 0.0
-    @Published var borderInverted: Bool = true
+    @Published var borderInverted: Bool = false
 
     init(cellData: AudioCellData)
     {
