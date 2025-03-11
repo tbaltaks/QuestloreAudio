@@ -103,54 +103,57 @@ struct AudioCell: View
         .cornerRadius(12)
     }
 }
-//    // MARK: - Action Handlers
-//
-//    // Handles a quick tap (finger released before durationToAction)
-//    func handleQuickTap() {
-//        if isActive {
-//            // If the cell is active, stop audio
-//            AudioManager.shared.stopAudio(for: cellModel.cellData.audio)
-//        } else {
-//            // If not active, play audio
-//            AudioManager.shared.playAudio(for: cellModel.cellData.audio)
-//        }
-//        isActive.toggle()
-//        onToggle?()
-//    }
-//
-//    // Handles a slow tap (when the press is held long enough)
-//    func handleSlowTap() {
-//        // Ensure the cell is active (solo it)
-//        if !isActive {
-//            AudioManager.shared.playAudio(for: cellModel.cellData.audio)
-//            isActive = true
-//        }
-//        // In a full implementation, you'd now also turn off other cells.
-//        onSolo?()
-//    }
-//}
 
-//struct AudioCellButton_Previews: PreviewProvider
-//{
-//    static var previews: some View
-//    {
-//        // Preview in both light and dark mode for demonstration.
-//        Group
-//        {
-//            AudioCell(cellData: AudioCellData(audio: "", label: "Test", accentColor: .blue))
-//            .previewLayout(.sizeThatFits)
-//            .preferredColorScheme(.light)
-//            .padding()
-//
-//            AudioCell(cellData: AudioCellData(audio: "", label: "Test", accentColor: .blue))
-//            .previewLayout(.sizeThatFits)
-//            .preferredColorScheme(.dark)
-//            .padding()
-//        }
-//    }
-//}
+
+struct AudioCell_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            HStack {
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+            }
+            .previewLayout(.sizeThatFits)
+            .preferredColorScheme(.light)
+            .padding()
+            
+            
+            HStack {
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+            }
+            .previewLayout(.sizeThatFits)
+            .preferredColorScheme(.dark)
+            .padding()
+        }
+    }
+}
     
-
 
 // Extension to create a Color from a hex string.
 extension Color
