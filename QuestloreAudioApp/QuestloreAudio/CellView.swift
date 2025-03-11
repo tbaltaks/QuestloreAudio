@@ -28,7 +28,8 @@ struct AudioCell: View
     // Detect the device theme
     @Environment(\.colorScheme) var colorScheme
     
-    @State private var borderProgress: CGFloat = 0.0
+    @State private var borderProgress: CGFloat = 0
+    @State private var borderIsClockwise: Bool = true
     
     // Computed property for the background color based on the color scheme.
     var backgroundColor: Color
@@ -87,9 +88,15 @@ struct AudioCell: View
                     // Quick tap detected: toggle cell
                     onToggle?()
                     
+                    withTransaction(Transaction(animation: nil))
+                    {
+                        borderProgress = 0.0
+                        borderIsClockwise = cellModel.isActive
+                    }
+
                     // Animate border: Quick
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        borderProgress = cellModel.isActive ? 1.0 : 0.0
+                    withAnimation(.easeInOut(duration: 0.28)) {
+                        borderProgress = 1.0
                     }
                 }
                 else if isSlowTapActioned && !isSlowTapCompleted
@@ -110,9 +117,24 @@ struct AudioCell: View
         .cornerRadius(12)
         .overlay(CellBorder(
                 color: cellModel.cellData.accentColor,
-                progress: borderProgress
+                progress: borderProgress,
+                isClockwise: borderIsClockwise
             )
+            .allowsHitTesting(false)
         )
+        .onAppear()
+        {
+            withTransaction(Transaction(animation: nil))
+            {
+                borderProgress = 0.0
+                borderIsClockwise = true
+            }
+
+            // Animate border: Quick
+            withAnimation(.easeInOut(duration: 0.28)) {
+                borderProgress = 1.0
+            }
+        }
     }
 }
 
@@ -127,27 +149,41 @@ struct CellBorder: View, Animatable
     // The starting angle of the fill
     var startAngle: Angle = .degrees(-90)
     
-    // Border fill progress (0 = unfilled, 1 = fully filled)
+    // Progress and direction condtion of fill
     var progress: CGFloat
+    var isClockwise: Bool
     
     var animatableData: CGFloat {
             get { progress }
             set { progress = newValue }
         }
     
+    private var animatedStops: [Gradient.Stop]
+    {
+        if isClockwise
+        {
+            return [
+                .init(color: color, location: 0),
+                .init(color: color, location: progress),
+                .init(color: .clear, location: progress),
+                .init(color: .clear, location: 1)
+            ]
+        }
+        else
+        {
+            return [
+                .init(color: .clear, location: 0),
+                .init(color: .clear, location: progress),
+                .init(color: color, location: progress),
+                .init(color: color, location: 1)
+            ]
+        }
+    }
+    
     var body: some View
     {
-        // Build gradient stops so that from 0 to progress the gradient is white, then clear afterward.
-        // The stops use normalized locations (0...1) across the full 360° circle.
-        let stops: [Gradient.Stop] = [
-            .init(color: color, location: 0),
-            .init(color: color, location: progress),
-            .init(color: .clear, location: progress),
-            .init(color: .clear, location: 1)
-        ]
-        
         AngularGradient(
-            gradient: Gradient(stops: stops),
+            gradient: Gradient(stops: animatedStops),
             center: .center,
             startAngle: startAngle,
             endAngle: startAngle + .degrees(360)

@@ -40,7 +40,8 @@ struct SceneView: View
         gridModel = AudioGridModel(cellDataArray: allCellData)
     }
     
-    let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 2)
+    // MARK: Grid Layout
+    let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 10)
     
     var body: some View
     {
