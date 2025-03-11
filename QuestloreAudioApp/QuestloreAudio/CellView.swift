@@ -28,6 +28,8 @@ struct AudioCell: View
     // Detect the device theme
     @Environment(\.colorScheme) var colorScheme
     
+    @State private var borderProgress: CGFloat = 0.0
+    
     // Computed property for the background color based on the color scheme.
     var backgroundColor: Color
     {
@@ -101,8 +103,63 @@ struct AudioCell: View
         .aspectRatio(1.66, contentMode: .fit)
         .background(backgroundColor)
         .cornerRadius(12)
+        .overlay(CellBorder(
+                color: cellModel.cellData.accentColor,
+                progress: borderProgress
+            )
+        )
+        .onAppear {
+            // For testing: animate the border fill from 0 to 1 over 1 second.
+            withAnimation(Animation.easeInOut(duration: 0.46))
+            {
+                borderProgress = 1.0
+            }
+        }
     }
 }
+
+
+struct CellBorder: View, Animatable
+{
+    // Style settings
+    var lineWidth: CGFloat = 2
+    var cornerRadius: CGFloat = 12
+    var color: Color = .blue
+    
+    // The starting angle of the fill
+    var startAngle: Angle = .degrees(-90)
+    
+    // Border fill progress (0 = unfilled, 1 = fully filled)
+    var progress: CGFloat
+    
+    var animatableData: CGFloat {
+            get { progress }
+            set { progress = newValue }
+        }
+    
+    var body: some View
+    {
+        // Build gradient stops so that from 0 to progress the gradient is white, then clear afterward.
+        // The stops use normalized locations (0...1) across the full 360° circle.
+        let stops: [Gradient.Stop] = [
+            .init(color: color, location: 0),
+            .init(color: color, location: progress),
+            .init(color: .clear, location: progress),
+            .init(color: .clear, location: 1)
+        ]
+        
+        AngularGradient(
+            gradient: Gradient(stops: stops),
+            center: .center,
+            startAngle: startAngle,
+            endAngle: startAngle + .degrees(360)
+        )
+        .mask(RoundedRectangle(cornerRadius: cornerRadius)
+                .stroke(lineWidth: lineWidth)
+        )
+    }
+}
+
 
 
 struct AudioCell_Previews: PreviewProvider {
