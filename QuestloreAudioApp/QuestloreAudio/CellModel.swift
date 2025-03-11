@@ -66,11 +66,11 @@ class AudioCellModel: ObservableObject, Identifiable
     }
     
     
-    func AnimateBorder(startFill: CGFloat = 10.0, targetFill: CGFloat = 1.0, duration: Double = 0.28, isInverted: Bool = false)
+    func AnimateBorder(startFill: CGFloat = 69.0, targetFill: CGFloat = 1.0, duration: Double = 0.28, isInverted: Bool = false)
     {
         withTransaction(Transaction(animation: nil))
         {
-            borderProgress = startFill == 10.0 ? borderProgress : startFill
+            borderProgress = startFill == 69.0 ? borderProgress : startFill
             borderInverted = isInverted
         }
         
