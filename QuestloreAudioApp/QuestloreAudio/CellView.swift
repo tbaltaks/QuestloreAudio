@@ -86,6 +86,11 @@ struct AudioCell: View
                 {
                     // Quick tap detected: toggle cell
                     onToggle?()
+                    
+                    // Animate border: Quick
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        borderProgress = cellModel.isActive ? 1.0 : 0.0
+                    }
                 }
                 else if isSlowTapActioned && !isSlowTapCompleted
                 {
@@ -108,13 +113,6 @@ struct AudioCell: View
                 progress: borderProgress
             )
         )
-        .onAppear {
-            // For testing: animate the border fill from 0 to 1 over 1 second.
-            withAnimation(Animation.easeInOut(duration: 0.46))
-            {
-                borderProgress = 1.0
-            }
-        }
     }
 }
 
