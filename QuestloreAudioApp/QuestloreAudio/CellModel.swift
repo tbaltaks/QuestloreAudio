@@ -39,11 +39,11 @@ class AudioCellModel: ObservableObject, Identifiable
         
         if isActive
         {
-            AudioManager.shared.stopAudio(for: cellData.audio)
+            AudioManager.shared.playAudio(for: cellData.audio)
         }
         else
         {
-            AudioManager.shared.playAudio(for: cellData.audio)
+            AudioManager.shared.stopAudio(for: cellData.audio)
         }
         
         AnimateBorder(startFill: 0.0, isInverted: !isActive)
