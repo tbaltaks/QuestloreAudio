@@ -105,6 +105,13 @@ struct AudioCell: View
             )
             .allowsHitTesting(false)
         )
+        .overlay(OuterCellBorder(
+                color: cellModel.cellData.accentColor,
+                progress: cellModel.outerBorderProgress,
+                isInverted: cellModel.outerBorderInverted
+            )
+            .allowsHitTesting(false)
+        )
     }
 }
 
@@ -113,6 +120,63 @@ struct CellBorder: View, Animatable
 {
     // Style settings
     var lineWidth: CGFloat = 2
+    var cornerRadius: CGFloat = 12
+    var color: Color = .blue
+    
+    // The starting angle of the fill
+    var startAngle: Angle = .degrees(-90)
+    
+    // Progress and direction condtion of fill
+    var progress: CGFloat
+    var isInverted: Bool
+    
+    var animatableData: CGFloat {
+            get { progress }
+            set { progress = newValue }
+        }
+    
+    private var animatedStops: [Gradient.Stop]
+    {
+        if isInverted
+        {
+            let absProgress = abs(progress)
+            
+            return [
+                .init(color: .clear, location: 0),
+                .init(color: .clear, location: absProgress),
+                .init(color: color, location: absProgress),
+                .init(color: color, location: 1)
+            ]
+        }
+        else
+        {
+            return [
+                .init(color: color, location: 0),
+                .init(color: color, location: progress),
+                .init(color: .clear, location: progress),
+                .init(color: .clear, location: 1)
+            ]
+        }
+    }
+    
+    var body: some View
+    {
+        AngularGradient(
+            gradient: Gradient(stops: animatedStops),
+            center: .center,
+            startAngle: startAngle,
+            endAngle: startAngle + .degrees(360)
+        )
+        .mask(RoundedRectangle(cornerRadius: cornerRadius)
+                .stroke(lineWidth: lineWidth)
+        )
+    }
+}
+
+struct OuterCellBorder: View, Animatable
+{
+    // Style settings
+    var lineWidth: CGFloat = 4
     var cornerRadius: CGFloat = 12
     var color: Color = .blue
     
