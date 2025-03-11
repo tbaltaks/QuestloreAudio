@@ -79,8 +79,10 @@ struct SceneView: View
             .padding(globalSpacing)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(sceneBackground)
+            .drawingGroup()
         }
-        .edgesIgnoringSafeArea(.all)
+        .edgesIgnoringSafeArea(.horizontal)
+        .edgesIgnoringSafeArea(.bottom)
     }
     
     struct SceneView_Previews: PreviewProvider

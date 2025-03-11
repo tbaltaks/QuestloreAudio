@@ -170,6 +170,7 @@ struct CellBorder: View, Animatable
         .mask(RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(lineWidth: lineWidth)
         )
+//        .drawingGroup()
     }
 }
 
@@ -227,6 +228,7 @@ struct OuterCellBorder: View, Animatable
         .mask(RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(lineWidth: lineWidth)
         )
+//        .drawingGroup()
     }
 }
 
