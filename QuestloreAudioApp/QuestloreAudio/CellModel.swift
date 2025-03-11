@@ -46,7 +46,8 @@ class AudioCellModel: ObservableObject, Identifiable
             AudioManager.shared.stopAudio(for: cellData.audio)
         }
         
-        AnimateBorder(startFill: 0.0, isInverted: !isActive)
+        var targetFill = isActive ? 1.0 : -1.0
+        AnimateBorder(startFill: 0.0, targetFill: targetFill, isInverted: !isActive)
     }
     
     func Activate()
@@ -70,7 +71,15 @@ class AudioCellModel: ObservableObject, Identifiable
     {
         withTransaction(Transaction(animation: nil))
         {
-            borderProgress = startFill == 69.0 ? borderProgress : startFill
+            if (!isActive && borderProgress == -1.0)
+            {
+                borderProgress = 0.0
+            }
+            else
+            {
+                borderProgress = startFill == 69.0 ? borderProgress : startFill
+            }
+            
             borderInverted = isInverted
         }
         
@@ -102,17 +111,17 @@ class AudioGridModel: ObservableObject
         
         for other in cells where other.id != cell.id && other.isActive
         {
-            cell.AnimateBorder(startFill: 1.0, targetFill: 0.0, duration: cell.durationToComplete)
+            other.AnimateBorder(startFill: 1.0, targetFill: 0.0, duration: other.durationToComplete)
         }
     }
     
     func SoloCellCancelled(_ cell: AudioCellModel)
     {
-        if (!cell.isActive) { cell.AnimateBorder(targetFill: 0.0) }
+        if (!cell.isActive) { cell.AnimateBorder(startFill: cell.borderProgress, targetFill: 0.0) }
         
         for other in cells where other.id != cell.id && other.isActive
         {
-            cell.AnimateBorder(targetFill: 1.0)
+            other.AnimateBorder(targetFill: 1.0)
         }
     }
     

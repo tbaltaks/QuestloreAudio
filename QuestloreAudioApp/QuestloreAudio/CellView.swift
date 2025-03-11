@@ -130,22 +130,24 @@ struct CellBorder: View, Animatable
     
     private var animatedStops: [Gradient.Stop]
     {
-        if !isInverted
+        if isInverted
+        {
+            let absProgress = abs(progress)
+            
+            return [
+                .init(color: .clear, location: 0),
+                .init(color: .clear, location: absProgress),
+                .init(color: color, location: absProgress),
+                .init(color: color, location: 1)
+            ]
+        }
+        else
         {
             return [
                 .init(color: color, location: 0),
                 .init(color: color, location: progress),
                 .init(color: .clear, location: progress),
                 .init(color: .clear, location: 1)
-            ]
-        }
-        else
-        {
-            return [
-                .init(color: .clear, location: 0),
-                .init(color: .clear, location: progress),
-                .init(color: color, location: progress),
-                .init(color: color, location: 1)
             ]
         }
     }
