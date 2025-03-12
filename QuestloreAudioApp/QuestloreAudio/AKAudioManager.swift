@@ -5,9 +5,10 @@
 //  Created by Tom Baltaks on 7/3/2025.
 //
 
-import AudioKit
+import Foundation
 import AVFoundation // For AVAudioFile reading
 import QuartzCore // For CACurrentMediaTime
+import AudioKit
 
 // Wrap an AudioKit AudioPlayer along with its active fade timer
 class AKAudioPlaybackHandler
@@ -38,8 +39,10 @@ class AKAudioManager
     let engine = AudioEngine()
     let mixer = Mixer()
     
-    // Dictionary mapping an audio file’s name to its playback handler
+    // Dictionaries mapping an audio file’s name to its handler and data
     var players: [String: AKAudioPlaybackHandler] = [:]
+    var fftTaps: [String: FFTTap] = [:]
+    var fftSampleData: [String: [Float]] = [:]
     
     private init()
     {
@@ -68,7 +71,7 @@ class AKAudioManager
         { timer in
             let elapsed = CACurrentMediaTime() - startTime
             let t = Float(min(elapsed / duration, 1.0))
-            let easedT = self.missKCurve(t, isFadingIn: targetVolume != 0)
+            let easedT = self.easeInOutKe(t, isFadingIn: targetVolume != 0)
             let newVolume = startVolume + (targetVolume - startVolume) * easedT
             handler.player.volume = newVolume
             
@@ -82,17 +85,14 @@ class AKAudioManager
         }
     }
     
-    // MARK: Easing helper function
-    private func missKCurve(_ t: Float, isFadingIn: Bool) -> Float
+    // Easing function
+    private func easeInOutKe(_ t: Float, isFadingIn: Bool) -> Float
     {
         var newT: Float
 
-        if isFadingIn
-        {
+        if isFadingIn {
             newT = pow(t, 3.6) * (2.8 - 1.8 * pow(t, 2))
-        }
-        else
-        {
+        } else {
             newT = pow(t, 2.5) * (3 - 2 * pow(t, 1.25))
         }
 
@@ -109,6 +109,7 @@ class AKAudioManager
         {
             handler.fadeTimer?.invalidate()
             fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
+            startFFTAnalysis(for: audioFileName)
             return
         }
         
@@ -139,6 +140,7 @@ class AKAudioManager
             players[audioFileName] = handler
             
             fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
+            startFFTAnalysis(for: audioFileName)
         }
         catch {
             print("Error playing audio: \(error)")
@@ -155,11 +157,48 @@ class AKAudioManager
         
         // Cancel any ongoing fade before starting the fade-out.
         handler.fadeTimer?.invalidate()
+        
         fade(handler: handler, toVolume: 0.0, duration: fadeOutDuration)
         {
             handler.player.stop()
+            
+            self.stopFFTAnalysis(for: audioFileName)
+            
             self.mixer.removeInput(handler.player)
             self.players.removeValue(forKey: audioFileName)
         }
+    }
+    
+    
+    // MARK: - Audio Analysis
+    func startFFTAnalysis(for audioFileName: String)
+    {
+        guard let handler = players[audioFileName] else {
+            print("No player found for \(audioFileName)")
+            return
+        }
+        
+        // Cancel any existing tap for this file
+        fftTaps[audioFileName]?.stop()
+        
+        let tap = FFTTap(handler.player, callbackQueue: DispatchQueue.main)
+        { fftData in
+            self.fftSampleData[audioFileName] = fftData
+            
+            self.fftSampleData[audioFileName]?.forEach
+            { fftSample in
+                print(fftSample)
+            }
+        }
+        
+        tap.start()
+        fftTaps[audioFileName] = tap
+    }
+
+    func stopFFTAnalysis(for audioFileName: String)
+    {
+        fftTaps[audioFileName]?.stop()
+        fftTaps.removeValue(forKey: audioFileName)
+        fftSampleData.removeValue(forKey: audioFileName)
     }
 }

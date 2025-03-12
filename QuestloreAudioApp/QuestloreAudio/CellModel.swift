@@ -38,19 +38,16 @@ class AudioCellModel: ObservableObject, Identifiable
     
     func Toggle()
     {
-        isActive.toggle()
-        
         if isActive
         {
-            AKAudioManager.shared.playAudio(for: cellData.audio)
+            Deactivate()
+            AnimateBorder(startFill: 0.0, targetFill: -1.0, isInverted: true)
         }
         else
         {
-            AKAudioManager.shared.stopAudio(for: cellData.audio)
+            Activate()
+            AnimateBorder(startFill: 0.0, targetFill: 1.0)
         }
-        
-        let targetFill = isActive ? 1.0 : -1.0
-        AnimateBorder(startFill: 0.0, targetFill: targetFill, isInverted: !isActive)
     }
     
     func Activate()
