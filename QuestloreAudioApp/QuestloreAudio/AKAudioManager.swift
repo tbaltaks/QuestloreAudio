@@ -33,14 +33,17 @@ class AKAudioManager
     // Fade durations (in seconds)
     let fadeDuration: TimeInterval = 4.0
     
-    // The AudioKit engine (shared by all players)
+    // AudioKit engine and a mixer to combine multiple players.
     let engine = AudioEngine()
+    let mixer = Mixer()
     
     // Dictionary mapping an audio file’s name to its playback handler
     var players: [String: AKAudioPlaybackHandler] = [:]
     
     private init()
     {
+        engine.output = mixer
+        
         do {
             try engine.start()
         }
@@ -127,10 +130,8 @@ class AKAudioManager
             player.volume = 0.0
             player.isLooping = true
             
-            // Connect the player to the engine's output.
-            engine.output = player
-            
-            // Start playing.
+            // Add player to Mixer and start playback
+            mixer.addInput(player)
             player.play()
             
             let handler = AKAudioPlaybackHandler(player: player)
@@ -156,6 +157,7 @@ class AKAudioManager
         fade(handler: handler, toVolume: 0.0, duration: fadeDuration)
         {
             handler.player.stop()
+            self.mixer.removeInput(handler.player)
             self.players.removeValue(forKey: audioFileName)
         }
     }
