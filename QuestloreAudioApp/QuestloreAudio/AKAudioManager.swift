@@ -31,7 +31,8 @@ class AKAudioManager
     static let shared = AKAudioManager()
     
     // Fade durations (in seconds)
-    let fadeDuration: TimeInterval = 4.0
+    let fadeInDuration: TimeInterval = 4.0
+    let fadeOutDuration: TimeInterval = 4.0
     
     // AudioKit engine and a mixer to combine multiple players.
     let engine = AudioEngine()
@@ -107,7 +108,7 @@ class AKAudioManager
         if let handler = players[audioFileName]
         {
             handler.fadeTimer?.invalidate()
-            fade(handler: handler, toVolume: 1.0, duration: fadeDuration)
+            fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
             return
         }
         
@@ -137,7 +138,7 @@ class AKAudioManager
             let handler = AKAudioPlaybackHandler(player: player)
             players[audioFileName] = handler
             
-            fade(handler: handler, toVolume: 1.0, duration: fadeDuration)
+            fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
         }
         catch {
             print("Error playing audio: \(error)")
@@ -154,7 +155,7 @@ class AKAudioManager
         
         // Cancel any ongoing fade before starting the fade-out.
         handler.fadeTimer?.invalidate()
-        fade(handler: handler, toVolume: 0.0, duration: fadeDuration)
+        fade(handler: handler, toVolume: 0.0, duration: fadeOutDuration)
         {
             handler.player.stop()
             self.mixer.removeInput(handler.player)
