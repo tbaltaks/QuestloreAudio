@@ -6,11 +6,10 @@
 //
 
 import AudioKit
-import AVFoundation  // For AVAudioFile reading
-import Foundation
-import QuartzCore  // For CACurrentMediaTime
+import AVFoundation // For AVAudioFile reading
+import QuartzCore // For CACurrentMediaTime
 
-// Wrap an AudioKit AudioPlayer along with its active fade timer.
+// Wrap an AudioKit AudioPlayer along with its active fade timer
 class AKAudioPlaybackHandler
 {
     let player: AudioPlayer
@@ -31,13 +30,13 @@ class AKAudioManager
 {
     static let shared = AKAudioManager()
     
-    // Fade duration in seconds (same as before)
+    // Fade durations (in seconds)
     let fadeDuration: TimeInterval = 4.0
     
     // The AudioKit engine (shared by all players)
     let engine = AudioEngine()
     
-    // Dictionary mapping an audio file’s name to its playback handler.
+    // Dictionary mapping an audio file’s name to its playback handler
     var players: [String: AKAudioPlaybackHandler] = [:]
     
     private init()
@@ -50,14 +49,15 @@ class AKAudioManager
         }
     }
     
+    
     // MARK: - Fade Logic
-    // Fades the player's volume to a target value over the given duration using a smooth ease.
+    // Fades the player's volume to a target value over the given duration using a smooth ease
     private func fade(handler: AKAudioPlaybackHandler, toVolume targetVolume: Float, duration: TimeInterval, completion: (() -> Void)? = nil)
     {
         let startVolume = handler.player.volume
         let startTime = CACurrentMediaTime()
         
-        // Cancel any existing fade.
+        // Cancel any existing fade
         handler.fadeTimer?.invalidate()
         
         handler.fadeTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true)
@@ -95,8 +95,9 @@ class AKAudioManager
         return newT
     }
     
+    
     // MARK: - Audio Control
-    // Plays an audio file (by name) with a fade-in effect.
+    // Plays an audio file (by name) with a fade-in effect
     func playAudio(for audioFileName: String)
     {
         // If we already have a player for this file, cancel any fade-out and fade in...
@@ -109,14 +110,14 @@ class AKAudioManager
         
         //...otherwise:
 
-        // Locate the file in the main bundle.
+        // Locate the file in the main bundle
         guard let url = Bundle.main.url(forResource: audioFileName, withExtension: nil) else {
             print("Audio file \(audioFileName) not found!")
             return
         }
         
         do {
-            // Use AVAudioFile to read the file.
+            // Use AVAudioFile to read the file
             let file = try AVAudioFile(forReading: url)
             guard let player = AudioPlayer(file: file) else {
                 print("Error: Could not create AudioPlayer for file \(audioFileName)")
