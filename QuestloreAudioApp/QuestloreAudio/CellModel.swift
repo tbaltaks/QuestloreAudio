@@ -42,11 +42,11 @@ class AudioCellModel: ObservableObject, Identifiable
         
         if isActive
         {
-            AudioManager.shared.playAudio(for: cellData.audio)
+            AKAudioManager.shared.playAudio(for: cellData.audio)
         }
         else
         {
-            AudioManager.shared.stopAudio(for: cellData.audio)
+            AKAudioManager.shared.stopAudio(for: cellData.audio)
         }
         
         let targetFill = isActive ? 1.0 : -1.0
@@ -58,7 +58,7 @@ class AudioCellModel: ObservableObject, Identifiable
         if isActive { return }
         
         isActive = true
-        AudioManager.shared.playAudio(for: cellData.audio)
+        AKAudioManager.shared.playAudio(for: cellData.audio)
     }
     
     func Deactivate()
@@ -66,7 +66,7 @@ class AudioCellModel: ObservableObject, Identifiable
         if !isActive { return }
         
         isActive = false
-        AudioManager.shared.stopAudio(for: cellData.audio)
+        AKAudioManager.shared.stopAudio(for: cellData.audio)
     }
     
     
