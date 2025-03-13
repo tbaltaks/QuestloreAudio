@@ -43,6 +43,7 @@ class AKAudioManager
     var players: [String: AKAudioPlaybackHandler] = [:]
     var fftTaps: [String: FFTTap] = [:]
     var fftSampleData: [String: [Float]] = [:]
+    var bandedSampleData: [String: [Float]] = [:]
     
     private init()
     {
@@ -124,11 +125,14 @@ class AKAudioManager
         do {
             // Use AVAudioFile to read the file
             let file = try AVAudioFile(forReading: url)
-            guard let player = AudioPlayer(file: file) else {
-                print("Error: Could not create AudioPlayer for file \(audioFileName)")
+            
+            guard let buffer = try AVAudioPCMBuffer(file: file) else {
+                print("Could not load buffer for \(audioFileName)")
                 return
             }
             
+            let player = AudioPlayer()
+            player.buffer = buffer
             player.volume = 0.0
             player.isLooping = true
             
@@ -161,7 +165,6 @@ class AKAudioManager
         fade(handler: handler, toVolume: 0.0, duration: fadeOutDuration)
         {
             handler.player.stop()
-            
             self.stopFFTAnalysis(for: audioFileName)
             
             self.mixer.removeInput(handler.player)
@@ -171,6 +174,8 @@ class AKAudioManager
     
     
     // MARK: - Audio Analysis
+    var processorTimer: Timer?
+    
     func startFFTAnalysis(for audioFileName: String)
     {
         guard let handler = players[audioFileName] else {
@@ -178,27 +183,55 @@ class AKAudioManager
             return
         }
         
-        // Cancel any existing tap for this file
         fftTaps[audioFileName]?.stop()
         
-        let tap = FFTTap(handler.player, callbackQueue: DispatchQueue.main)
+        let tap = FFTTap(handler.player, bufferSize: 1024, fftValidBinCount: .fiveHundredAndTwelve, callbackQueue: DispatchQueue.main)
         { fftData in
             self.fftSampleData[audioFileName] = fftData
-            
-            self.fftSampleData[audioFileName]?.forEach
-            { fftSample in
-                print(fftSample)
-            }
         }
         
         tap.start()
         fftTaps[audioFileName] = tap
+        
+        processorTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            self.processFFTData(for: audioFileName)
+        }
     }
 
     func stopFFTAnalysis(for audioFileName: String)
     {
+        processorTimer?.invalidate()
+        processorTimer = nil
         fftTaps[audioFileName]?.stop()
         fftTaps.removeValue(forKey: audioFileName)
         fftSampleData.removeValue(forKey: audioFileName)
+    }
+    
+    func processFFTData(for audioFileName: String)
+    {
+        var acruedSampleData = [Float](repeating: 0.0, count: 16)
+        
+        var sampleIndex: Int = 0
+        var rawSampleCount: Float = 1.0
+        
+        for i in 0..<16
+        {
+            var sampleSum: Float = 0.0
+            let roundedSampleCount = Int(round(rawSampleCount))
+            
+            for _ in 0..<roundedSampleCount
+            {
+                sampleSum += fftSampleData[audioFileName]?[sampleIndex] ?? 0 * Float(sampleIndex + 1)
+                sampleIndex += 1
+            }
+            
+            acruedSampleData[i] = sampleSum / Float(sampleIndex) * 10
+            rawSampleCount *= 1.39366
+            
+            print("Stem \(i + 1) for \(audioFileName): \(acruedSampleData[i])")
+        }
+        print("----------------------------------------------------------------------")
+        
+        bandedSampleData[audioFileName] = acruedSampleData
     }
 }

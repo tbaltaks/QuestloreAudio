@@ -37,10 +37,28 @@ struct AudioCell: View
     {
         ZStack
         {
-            // Background and label
-            Text(cellModel.cellData.label)
-                .foregroundColor(cellModel.cellData.accentColor)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            VStack
+            {
+                GeometryReader
+                { geometry in
+                    HStack
+                    {
+                        Spacer()
+                
+                        VisualiserStem()
+                            .frame(height: 50) // Example height, will be animated
+                            .alignmentGuide(.bottom) { _ in 0 } // Anchor to bottom
+                            .offset(y: geometry.size.height * 0.5) // Move stem down 30% from top
+                        
+                        Spacer()
+                    }
+                }
+                .frame(height: 100) // Give space for the visualizer
+                
+                Text(cellModel.cellData.label)
+                    .foregroundColor(cellModel.cellData.accentColor)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
         .contentShape(Rectangle()) // makes full area tappable
         .gesture(DragGesture(minimumDistance: 0)
@@ -112,6 +130,25 @@ struct AudioCell: View
             )
             .allowsHitTesting(false)
         )
+    }
+}
+
+
+struct VisualiserStem: View
+{
+    @State var height: CGFloat = 10 // Initial height
+    
+    var body: some View
+    {
+        RoundedRectangle(cornerRadius: 5)
+            .fill(Color.blue) // Change color as needed
+            .frame(width: 10, height: height, alignment: .bottom)
+            .animation(.easeInOut(duration: 0.3), value: height)
+            .onAppear() {
+                withAnimation {
+                    height = height == 10 ? 100 : 10 // Example animation trigger
+                }
+            }
     }
 }
 

@@ -112,6 +112,7 @@ class AudioCellModel: ObservableObject, Identifiable
     }
 }
 
+
 class AudioGridModel: ObservableObject
 {
     @Published var cells: [AudioCellModel]
@@ -121,7 +122,6 @@ class AudioGridModel: ObservableObject
         self.cells = cellDataArray.map { AudioCellModel(cellData: $0) }
     }
     
-    // Toggles a given cell
     func ToggleCell(_ cell: AudioCellModel)
     {
         cell.Toggle()
@@ -155,10 +155,9 @@ class AudioGridModel: ObservableObject
         }
     }
     
-    // Solos a given cell
     func SoloCell(_ cell: AudioCellModel)
     {
-        cell.Activate() // Ensure this cell is active
+        cell.Activate()
         if (cell.outerBorderProgress > 0) { cell.AnimateOuterBorder(startFill: 0.0, targetFill: -1.0, duration: 0.24, isInverted: true) }
         
         for other in cells where other.id != cell.id && other.isActive
