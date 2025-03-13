@@ -40,7 +40,7 @@ class AKAudioManager
     let mixer = Mixer()
     
     // Dictionaries mapping an audio file’s name to its handler and data
-    var players: [String: AKAudioPlaybackHandler] = [:]
+    var handlers: [String: AKAudioPlaybackHandler] = [:]
     var fftTaps: [String: FFTTap] = [:]
     var fftSampleData: [String: [Float]] = [:]
     var bandedSampleData: [String: [Float]] = [:]
@@ -106,7 +106,7 @@ class AKAudioManager
     func playAudio(for audioFileName: String)
     {
         // If we already have a player for this file, cancel any fade-out and fade in...
-        if let handler = players[audioFileName]
+        if let handler = handlers[audioFileName]
         {
             handler.fadeTimer?.invalidate()
             fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
@@ -141,7 +141,7 @@ class AKAudioManager
             player.play()
             
             let handler = AKAudioPlaybackHandler(player: player)
-            players[audioFileName] = handler
+            handlers[audioFileName] = handler
             
             fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
             startFFTAnalysis(for: audioFileName)
@@ -154,7 +154,7 @@ class AKAudioManager
     // Stops an audio file (by name) with a fade-out effect
     func stopAudio(for audioFileName: String)
     {
-        guard let handler = players[audioFileName] else {
+        guard let handler = handlers[audioFileName] else {
             print("No audio is playing for \(audioFileName)")
             return
         }
@@ -168,7 +168,7 @@ class AKAudioManager
             self.stopFFTAnalysis(for: audioFileName)
             
             self.mixer.removeInput(handler.player)
-            self.players.removeValue(forKey: audioFileName)
+            self.handlers.removeValue(forKey: audioFileName)
         }
     }
     
@@ -178,7 +178,7 @@ class AKAudioManager
     
     func startFFTAnalysis(for audioFileName: String)
     {
-        guard let handler = players[audioFileName] else {
+        guard let handler = handlers[audioFileName] else {
             print("No player found for \(audioFileName)")
             return
         }
