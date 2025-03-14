@@ -41,7 +41,7 @@ struct SceneView: View
     }
     
     // MARK: Grid Layout
-    let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 2)
+    let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 10)
     
     var body: some View
     {

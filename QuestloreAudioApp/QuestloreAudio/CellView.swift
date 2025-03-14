@@ -37,28 +37,30 @@ struct AudioCell: View
     {
         ZStack
         {
-            VStack
+            VStack (spacing: 0)
             {
                 GeometryReader
                 { geometry in
-                    HStack
+                    HStack (spacing: geometry.size.width * 0.034)
                     {
                         Spacer()
-                
-                        VisualiserStem()
-                            .frame(height: 50) // Example height, will be animated
-                            .alignmentGuide(.bottom) { _ in 0 } // Anchor to bottom
-                            .offset(y: geometry.size.height * 0.5) // Move stem down 30% from top
+                        
+                        ForEach (1...16, id: \.self)
+                        { number in
+                            VisualiserStem(
+                                color: cellModel.cellData.accentColor,
+                                minHeight: geometry.size.height * 0.068
+                            )
+                        }
                         
                         Spacer()
                     }
                 }
-                .frame(height: 100) // Give space for the visualizer
                 
-                Text(cellModel.cellData.label)
+                ScaledText(text: cellModel.cellData.label)
                     .foregroundColor(cellModel.cellData.accentColor)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .contentShape(Rectangle()) // makes full area tappable
         .gesture(DragGesture(minimumDistance: 0)
@@ -134,21 +136,45 @@ struct AudioCell: View
 }
 
 
-struct VisualiserStem: View
+struct VisualiserStem: View, Animatable
 {
-    @State var height: CGFloat = 10 // Initial height
+    var color: Color = .blue
+    var minHeight: CGFloat
+    var height: CGFloat = 0
+    
+    var animatableData: CGFloat {
+        get { height }
+        set { height = newValue }
+    }
     
     var body: some View
     {
-        RoundedRectangle(cornerRadius: 5)
-            .fill(Color.blue) // Change color as needed
-            .frame(width: 10, height: height, alignment: .bottom)
-            .animation(.easeInOut(duration: 0.3), value: height)
-            .onAppear() {
-                withAnimation {
-                    height = height == 10 ? 100 : 10 // Example animation trigger
-                }
-            }
+        VStack
+        {
+            Spacer(minLength: 0)
+            
+            RoundedRectangle(cornerRadius: .infinity)
+                .fill(color)
+                .frame(minHeight: minHeight)
+                .frame(width: minHeight, height: height)
+                .animation(.easeInOut(duration: 0.3), value: height)
+        }
+    }
+}
+
+
+struct ScaledText: View
+{
+    let text: String
+    var body: some View
+    {
+        GeometryReader
+        { geometry in
+            Text(text)
+                .font(.system(size: geometry.size.width * 0.08))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(geometry.size.width * 0.06)
+        }
     }
 }
 
@@ -265,7 +291,6 @@ struct OuterCellBorder: View, Animatable
         .mask(RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(lineWidth: lineWidth)
         )
-//        .drawingGroup()
     }
 }
 
