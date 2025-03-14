@@ -44,6 +44,7 @@ class AKAudioManager
     var fftTaps: [String: FFTTap] = [:]
     var fftSampleData: [String: [Float]] = [:]
     var bandedSampleData: [String: [Float]] = [:]
+    var processorDisplayLinks: [String: (link: CADisplayLink, target: FFTDisplayLinkTarget)] = [:]
     
     private init()
     {
@@ -174,8 +175,6 @@ class AKAudioManager
     
     
     // MARK: - Audio Analysis
-    var processorTimer: Timer?
-    
     func startFFTAnalysis(for audioFileName: String)
     {
         guard let handler = handlers[audioFileName] else {
@@ -193,15 +192,23 @@ class AKAudioManager
         tap.start()
         fftTaps[audioFileName] = tap
         
-        processorTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            self.processFFTData(for: audioFileName)
-        }
+        // Invalidate any existing display link for this audio file.
+        processorDisplayLinks[audioFileName]?.link.invalidate()
+        
+        // Create a new display link target.
+        let target = FFTDisplayLinkTarget(audioFileName: audioFileName, manager: self)
+        // Create a display link using that target.
+        let link = CADisplayLink(target: target, selector: #selector(FFTDisplayLinkTarget.update(displayLink:)))
+        link.add(to: .main, forMode: .common)
+        
+        processorDisplayLinks[audioFileName] = (link, target)
     }
 
     func stopFFTAnalysis(for audioFileName: String)
     {
-        processorTimer?.invalidate()
-        processorTimer = nil
+        processorDisplayLinks[audioFileName]?.link.invalidate()
+        processorDisplayLinks.removeValue(forKey: audioFileName)
+        
         fftTaps[audioFileName]?.stop()
         fftTaps.removeValue(forKey: audioFileName)
         fftSampleData.removeValue(forKey: audioFileName)
@@ -221,7 +228,7 @@ class AKAudioManager
             
             for _ in 0..<roundedSampleCount
             {
-                sampleSum += fftSampleData[audioFileName]?[sampleIndex] ?? 0 * Float(sampleIndex + 1)
+                sampleSum += (fftSampleData[audioFileName]?[sampleIndex] ?? 0) * Float(sampleIndex + 1)
                 sampleIndex += 1
             }
             
@@ -233,5 +240,24 @@ class AKAudioManager
         print("----------------------------------------------------------------------")
         
         bandedSampleData[audioFileName] = acruedSampleData
+    }
+}
+
+
+// MARK: Processor Uppdate Handler
+
+class FFTDisplayLinkTarget
+{
+    let audioFileName: String
+    weak var manager: AKAudioManager?
+    
+    init(audioFileName: String, manager: AKAudioManager) {
+        self.audioFileName = audioFileName
+        self.manager = manager
+    }
+    
+    @objc func update(displayLink: CADisplayLink) {
+        // Call the FFT processing function for this audio file.
+        manager?.processFFTData(for: audioFileName)
     }
 }
