@@ -43,7 +43,7 @@ struct AudioCell: View
                 { geometry in
                     HStack (spacing: geometry.size.width * 0.034)
                     {
-                        Spacer()
+                        Spacer(minLength: 0)
                         
                         ForEach (1...16, id: \.self)
                         { number in
@@ -52,9 +52,11 @@ struct AudioCell: View
                                 minHeight: geometry.size.height * 0.068
                             )
                         }
+//                        .border(.green) // for debugging
                         
-                        Spacer()
+                        Spacer(minLength: 0)
                     }
+//                    .border(.red) // for debugging
                 }
                 
                 ScaledText(text: cellModel.cellData.label)
@@ -315,6 +317,36 @@ struct AudioCell_Previews: PreviewProvider {
                     onToggle: { print("Cell toggled!") },
                     onSolo: { print("Cell soloed!") }
                 )
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
             }
             .previewLayout(.sizeThatFits)
             .preferredColorScheme(.light)
@@ -322,6 +354,68 @@ struct AudioCell_Previews: PreviewProvider {
             
             
             HStack {
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                
+                AudioCell(
+                    cellModel: AudioCellModel(
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                    ),
+                    onToggle: { print("Cell toggled!") },
+                    onSolo: { print("Cell soloed!") }
+                )
+                
                 AudioCell(
                     cellModel: AudioCellModel(
                         cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
