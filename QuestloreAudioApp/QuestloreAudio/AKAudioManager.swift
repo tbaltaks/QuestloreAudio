@@ -219,7 +219,7 @@ class AKAudioManager: ObservableObject
     
     func processFFTData(for audioFileName: String)
     {
-        var acruedSampleData = [Float](repeating: 0.0, count: 16)
+        var accruedSampleData = [Float](repeating: 0.0, count: 16)
         
         var sampleIndex: Int = 0
         var rawSampleCount: Float = 1.0
@@ -231,18 +231,25 @@ class AKAudioManager: ObservableObject
             
             for _ in 0..<roundedSampleCount
             {
-                sampleSum += (fftSampleData[audioFileName]?[sampleIndex] ?? 0) * Float(sampleIndex + 1)
+                guard let fftSamples = fftSampleData[audioFileName], sampleIndex < fftSamples.count else { break }
+                sampleSum += fftSamples[sampleIndex] * Float(sampleIndex + 1)
                 sampleIndex += 1
             }
             
-            acruedSampleData[i] = (sampleSum / Float(sampleIndex)) * (handlers[audioFileName]?.sampleDataScaler ?? 0.0) * 10
+            let average = sampleSum / Float(sampleIndex)
+            var bandValue = average * (handlers[audioFileName]?.sampleDataScaler ?? 0.0) * 10
+            if bandValue.isNaN {
+                bandValue = 0
+            }
+            
+            accruedSampleData[i] = bandValue
             rawSampleCount *= 1.39366
             
-            print("Stem \(i + 1) for \(audioFileName): \(acruedSampleData[i])")
+            print("Stem \(i + 1) for \(audioFileName): \(accruedSampleData[i])")
         }
         print("----------------------------------------------------------------------")
         
-        bandedSampleData[audioFileName] = acruedSampleData
+        bandedSampleData[audioFileName] = accruedSampleData
     }
 }
 
