@@ -16,6 +16,7 @@ class AKAudioPlaybackHandler
 {
     let player: AudioPlayer
     var fadeTimer: Timer?
+    var sampleDataScaler: Float = 0.0
     
     init(player: AudioPlayer) {
         self.player = player
@@ -76,12 +77,14 @@ class AKAudioManager: ObservableObject
             let easedT = self.easeInOutKe(t, isFadingIn: targetVolume != 0)
             let newVolume = startVolume + (targetVolume - startVolume) * easedT
             handler.player.volume = newVolume
+            handler.sampleDataScaler = newVolume
             
             if t >= 1.0
             {
                 timer.invalidate()
                 handler.fadeTimer = nil
                 handler.player.volume = targetVolume
+                handler.sampleDataScaler = targetVolume
                 completion?()
             }
         }
@@ -232,7 +235,7 @@ class AKAudioManager: ObservableObject
                 sampleIndex += 1
             }
             
-            acruedSampleData[i] = sampleSum / Float(sampleIndex) * 10
+            acruedSampleData[i] = (sampleSum / Float(sampleIndex)) * (handlers[audioFileName]?.sampleDataScaler ?? 0.0) * 10
             rawSampleCount *= 1.39366
             
             print("Stem \(i + 1) for \(audioFileName): \(acruedSampleData[i])")
