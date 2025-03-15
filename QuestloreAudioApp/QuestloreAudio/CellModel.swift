@@ -120,6 +120,7 @@ class AudioGridModel: ObservableObject
     init(cellDataArray: [AudioCellData])
     {
         self.cells = cellDataArray.map { AudioCellModel(cellData: $0) }
+        AKAudioManager.shared.preloadAudio(for: cellDataArray)
     }
     
     func ToggleCell(_ cell: AudioCellModel)

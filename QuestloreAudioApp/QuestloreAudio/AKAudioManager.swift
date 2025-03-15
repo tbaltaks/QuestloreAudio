@@ -44,6 +44,7 @@ class AKAudioManager: ObservableObject
     
     // Dictionaries mapping an audio file’s name to its handler and data
     var handlers: [UUID: AKAudioPlaybackHandler] = [:]
+    var preloadedBuffers: [UUID: AVAudioPCMBuffer] = [:]
     var fftTaps: [UUID: FFTTap] = [:]
     var fftSampleData: [UUID: [Float]] = [:]
     @Published var bandedSampleData: [UUID: [Float]] = [:]
@@ -69,6 +70,77 @@ class AKAudioManager: ObservableObject
                     self.processFFTData(for: cellID)
                 }
             }
+    }
+    
+    
+    // MARK: - Preloading Audio
+    func preloadAudio(for cellDataArray: [AudioCellData])
+    {
+//        DispatchQueue.global(qos: .background).async
+//        {
+//            for cell in cellDataArray
+//            {
+//                guard let url = Bundle.main.url(forResource: cell.audio, withExtension: nil) else {
+//                    print("Audio file \(cell.audio) not found!")
+//                    continue
+//                }
+//                do {
+//                    let file = try AVAudioFile(forReading: url)
+//
+//                    guard let buffer = try AVAudioPCMBuffer(file: file) else {
+//                        print("Could not load buffer for \(cell.audio)")
+//                        continue
+//                    }
+//
+//                    DispatchQueue.main.async
+//                    {
+//                        self.preloadedBuffers[cell.id] = buffer
+//
+//                        let player = AudioPlayer()
+//                        player.buffer = buffer
+//                        player.volume = 0.0
+//                        player.isLooping = true
+//
+//                        let handler = AKAudioPlaybackHandler(player: player)
+//                        self.handlers[cell.id] = handler
+//
+//                        self.globalMixer.addInput(player)
+//                    }
+//                } catch {
+//                    print("Error preloading \(cell.audio): \(error)")
+//                }
+//            }
+//        }
+        
+        for cell in cellDataArray
+        {
+            guard let url = Bundle.main.url(forResource: cell.audio, withExtension: nil) else {
+                print("Audio file \(cell.audio) not found!")
+                continue
+            }
+            do {
+                let file = try AVAudioFile(forReading: url)
+                
+                guard let buffer = try AVAudioPCMBuffer(file: file) else {
+                    print("Could not load buffer for \(cell.audio)")
+                    continue
+                }
+                
+                preloadedBuffers[cell.id] = buffer
+                
+                let player = AudioPlayer()
+                player.buffer = buffer
+                player.volume = 0.0
+                player.isLooping = true
+                
+                let handler = AKAudioPlaybackHandler(player: player)
+                handlers[cell.id] = handler
+                
+                globalMixer.addInput(player)
+            } catch {
+                print("Error preloading \(cell.audio): \(error)")
+            }
+        }
     }
     
     
@@ -121,44 +193,44 @@ class AKAudioManager: ObservableObject
     // Plays an audio file (by name) with a fade-in effect
     func playAudio(for cell: AudioCellData)
     {
-        // If we already have a player for this file, cancel any fade-out and fade in...
-        if let handler = handlers[cell.id]
-        {
-            handler.fadeTimer?.invalidate()
-            fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
-            startFFTAnalysis(for: cell.id)
+        guard let handler = handlers[cell.id] else {
+            print("Player for \(cell.id) not found!")
             return
         }
-        
-        //...otherwise:
-
-        // Locate the file in the main bundle
-        guard let url = Bundle.main.url(forResource: cell.audio, withExtension: nil) else {
-            print("Audio file \(cell.audio) not found!")
-            return
-        }
-        
         do {
-            // Use AVAudioFile to read the file
-            let file = try AVAudioFile(forReading: url)
-            
-            guard let buffer = try AVAudioPCMBuffer(file: file) else {
-                print("Could not load buffer for \(cell.audio)")
+            // If we already have a player for this file, cancel any fade-out and fade in
+            if handler.player.isPlaying
+            {
+                handler.fadeTimer?.invalidate()
+                fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
+                startFFTAnalysis(for: cell.id)
                 return
             }
             
-            let player = AudioPlayer()
-            player.buffer = buffer
-            player.volume = 0.0
-            player.isLooping = true
+            // Get preloaded buffer if available; otherwise load now
+//            let buffer: AVAudioPCMBuffer
+//            if let preBuffer = preloadedBuffers[cell.id] {
+//                buffer = preBuffer
+//            } else {
+//                // Locate the file in the main bundle
+//                guard let url = Bundle.main.url(forResource: cell.audio, withExtension: nil) else {
+//                    print("Audio file \(cell.audio) not found!")
+//                    return
+//                }
+//
+//                // Use AVAudioFile to read the file
+//                let file = try AVAudioFile(forReading: url)
+//
+//                guard let loadedBuffer = try AVAudioPCMBuffer(file: file) else {
+//                    print("Could not load buffer for \(cell.audio)")
+//                    return
+//                }
+//
+//                buffer = loadedBuffer
+//                preloadedBuffers[cell.id] = buffer
+//            }
             
-            // Add player to global mixer and start playback
-            globalMixer.addInput(player)
-            player.play()
-            
-            let handler = AKAudioPlaybackHandler(player: player)
-            handlers[cell.id] = handler
-            
+            handler.player.play()
             fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
             startFFTAnalysis(for: cell.id)
         }
@@ -171,7 +243,7 @@ class AKAudioManager: ObservableObject
     func stopAudio(for cell: AudioCellData)
     {
         guard let handler = handlers[cell.id] else {
-            print("No audio is playing for \(cell.audio)")
+            print("Player for \(cell.id) not found!")
             return
         }
         
