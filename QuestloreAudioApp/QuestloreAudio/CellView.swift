@@ -116,7 +116,7 @@ struct AudioCell: View
             .allowsHitTesting(false)
         )
         .onReceive(AKAudioManager.shared.$bandedSampleData) { newData in
-            if let updatedBands = newData[cellModel.cellData.audio] {
+            if let updatedBands = newData[cellModel.cellData.id] {
                 audioData = updatedBands
             }
         }

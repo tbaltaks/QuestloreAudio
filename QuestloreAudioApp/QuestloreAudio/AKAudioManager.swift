@@ -30,6 +30,7 @@ class AKAudioPlaybackHandler
 class AKAudioManager: ObservableObject
 {
     static let shared = AKAudioManager()
+    let numberOfStems: Int = 16
     
     // Fade durations (in seconds)
     let fadeInDuration: TimeInterval = 4.0
@@ -39,13 +40,13 @@ class AKAudioManager: ObservableObject
     let engine = AudioEngine()
     let globalMixer = Mixer()
     
-    var processorDisplayLinks: [String: (link: CADisplayLink, target: FFTDisplayLinkTarget)] = [:]
+    var processorDisplayLinks: [UUID: (link: CADisplayLink, target: FFTDisplayLinkTarget)] = [:]
     
     // Dictionaries mapping an audio file’s name to its handler and data
-    var handlers: [String: AKAudioPlaybackHandler] = [:]
-    var fftTaps: [String: FFTTap] = [:]
-    var fftSampleData: [String: [Float]] = [:]
-    @Published var bandedSampleData: [String: [Float]] = [:]
+    var handlers: [UUID: AKAudioPlaybackHandler] = [:]
+    var fftTaps: [UUID: FFTTap] = [:]
+    var fftSampleData: [UUID: [Float]] = [:]
+    @Published var bandedSampleData: [UUID: [Float]] = [:]
     
     private init()
     {
@@ -107,22 +108,22 @@ class AKAudioManager: ObservableObject
     
     // MARK: - Audio Control
     // Plays an audio file (by name) with a fade-in effect
-    func playAudio(for audioFileName: String)
+    func playAudio(for cell: AudioCellData)
     {
         // If we already have a player for this file, cancel any fade-out and fade in...
-        if let handler = handlers[audioFileName]
+        if let handler = handlers[cell.id]
         {
             handler.fadeTimer?.invalidate()
             fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
-            startFFTAnalysis(for: audioFileName)
+            startFFTAnalysis(for: cell.id)
             return
         }
         
         //...otherwise:
 
         // Locate the file in the main bundle
-        guard let url = Bundle.main.url(forResource: audioFileName, withExtension: nil) else {
-            print("Audio file \(audioFileName) not found!")
+        guard let url = Bundle.main.url(forResource: cell.audio, withExtension: nil) else {
+            print("Audio file \(cell.audio) not found!")
             return
         }
         
@@ -131,7 +132,7 @@ class AKAudioManager: ObservableObject
             let file = try AVAudioFile(forReading: url)
             
             guard let buffer = try AVAudioPCMBuffer(file: file) else {
-                print("Could not load buffer for \(audioFileName)")
+                print("Could not load buffer for \(cell.audio)")
                 return
             }
             
@@ -145,10 +146,10 @@ class AKAudioManager: ObservableObject
             player.play()
             
             let handler = AKAudioPlaybackHandler(player: player)
-            handlers[audioFileName] = handler
+            handlers[cell.id] = handler
             
             fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
-            startFFTAnalysis(for: audioFileName)
+            startFFTAnalysis(for: cell.id)
         }
         catch {
             print("Error playing audio: \(error)")
@@ -156,10 +157,10 @@ class AKAudioManager: ObservableObject
     }
     
     // Stops an audio file (by name) with a fade-out effect
-    func stopAudio(for audioFileName: String)
+    func stopAudio(for cell: AudioCellData)
     {
-        guard let handler = handlers[audioFileName] else {
-            print("No audio is playing for \(audioFileName)")
+        guard let handler = handlers[cell.id] else {
+            print("No audio is playing for \(cell.audio)")
             return
         }
         
@@ -168,76 +169,78 @@ class AKAudioManager: ObservableObject
         
         fade(handler: handler, toVolume: 0.0, duration: fadeOutDuration)
         {
-            self.stopFFTAnalysis(for: audioFileName)
+            self.stopFFTAnalysis(for: cell.id)
             
             handler.player.stop()
             self.globalMixer.removeInput(handler.player)
-            self.handlers.removeValue(forKey: audioFileName)
+            self.handlers.removeValue(forKey: cell.id)
         }
     }
     
     
     // MARK: - Audio Analysis
-    func startFFTAnalysis(for audioFileName: String)
+    func startFFTAnalysis(for cellID: UUID)
     {
-        guard let handler = handlers[audioFileName] else {
-            print("No player found for \(audioFileName)")
+        guard let handler = handlers[cellID] else {
+            print("No player found for \(cellID)")
             return
         }
         
-        fftTaps[audioFileName]?.stop()
+        fftTaps[cellID]?.stop()
         
         let tap = FFTTap(handler.player, bufferSize: 1024, fftValidBinCount: .fiveHundredAndTwelve, callbackQueue: DispatchQueue.main)
         { fftData in
-            self.fftSampleData[audioFileName] = fftData
+            self.fftSampleData[cellID] = fftData
         }
         
         tap.start()
-        fftTaps[audioFileName] = tap
+        fftTaps[cellID] = tap
         
         // Invalidate any existing display link for this audio file.
-        processorDisplayLinks[audioFileName]?.link.invalidate()
+        processorDisplayLinks[cellID]?.link.invalidate()
         
         // Create a new display link target.
-        let target = FFTDisplayLinkTarget(audioFileName: audioFileName, manager: self)
+        let target = FFTDisplayLinkTarget(cellID: cellID, manager: self)
         // Create a display link using that target.
         let link = CADisplayLink(target: target, selector: #selector(FFTDisplayLinkTarget.update(displayLink:)))
         link.add(to: .main, forMode: .common)
         
-        processorDisplayLinks[audioFileName] = (link, target)
+        processorDisplayLinks[cellID] = (link, target)
     }
 
-    func stopFFTAnalysis(for audioFileName: String)
+    func stopFFTAnalysis(for cellID: UUID)
     {
-        processorDisplayLinks[audioFileName]?.link.invalidate()
-        processorDisplayLinks.removeValue(forKey: audioFileName)
+        bandedSampleData[cellID] = [Float](repeating: 0.0, count: numberOfStems)
         
-        fftTaps[audioFileName]?.stop()
-        fftTaps.removeValue(forKey: audioFileName)
-        fftSampleData.removeValue(forKey: audioFileName)
+        processorDisplayLinks[cellID]?.link.invalidate()
+        processorDisplayLinks.removeValue(forKey: cellID)
+        
+        fftTaps[cellID]?.stop()
+        fftTaps.removeValue(forKey: cellID)
+        fftSampleData.removeValue(forKey: cellID)
     }
     
-    func processFFTData(for audioFileName: String)
+    func processFFTData(for cellID: UUID)
     {
-        var accruedSampleData = [Float](repeating: 0.0, count: 16)
+        var accruedSampleData = [Float](repeating: 0.0, count: numberOfStems)
         
         var sampleIndex: Int = 0
         var rawSampleCount: Float = 1.0
         
-        for i in 0..<16
+        for i in 0..<numberOfStemsΩ
         {
             var sampleSum: Float = 0.0
             let roundedSampleCount = Int(round(rawSampleCount))
             
             for _ in 0..<roundedSampleCount
             {
-                guard let fftSamples = fftSampleData[audioFileName], sampleIndex < fftSamples.count else { break }
+                guard let fftSamples = fftSampleData[cellID], sampleIndex < fftSamples.count else { break }
                 sampleSum += fftSamples[sampleIndex] * Float(sampleIndex + 1)
                 sampleIndex += 1
             }
             
             let average = sampleSum / Float(sampleIndex)
-            var bandValue = average * (handlers[audioFileName]?.sampleDataScaler ?? 0.0) * 10
+            var bandValue = average * (handlers[cellID]?.sampleDataScaler ?? 0.0) * 10
             if bandValue.isNaN {
                 bandValue = 0
             }
@@ -245,27 +248,27 @@ class AKAudioManager: ObservableObject
             accruedSampleData[i] = bandValue
             rawSampleCount *= 1.39366
             
-            print("Stem \(i + 1) for \(audioFileName): \(accruedSampleData[i])")
+            print("Stem \(i + 1) for \(cellID): \(accruedSampleData[i])")
         }
         print("----------------------------------------------------------------------")
         
-        bandedSampleData[audioFileName] = accruedSampleData
+        bandedSampleData[cellID] = accruedSampleData
     }
 }
 
 // Processor Uppdate Handler
 class FFTDisplayLinkTarget
 {
-    let audioFileName: String
+    let cellID: UUID
     weak var manager: AKAudioManager?
     
-    init(audioFileName: String, manager: AKAudioManager) {
-        self.audioFileName = audioFileName
+    init(cellID: UUID, manager: AKAudioManager) {
+        self.cellID = cellID
         self.manager = manager
     }
     
     @objc func update(displayLink: CADisplayLink) {
         // Call the FFT processing function for this audio file.
-        manager?.processFFTData(for: audioFileName)
+        manager?.processFFTData(for: cellID)
     }
 }
