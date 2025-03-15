@@ -227,7 +227,7 @@ class AKAudioManager: ObservableObject
         var sampleIndex: Int = 0
         var rawSampleCount: Float = 1.0
         
-        for i in 0..<numberOfStemsΩ
+        for i in 0..<numberOfStems
         {
             var sampleSum: Float = 0.0
             let roundedSampleCount = Int(round(rawSampleCount))
