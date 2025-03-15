@@ -10,6 +10,7 @@ import AVFoundation // For AVAudioFile reading
 import QuartzCore // For CACurrentMediaTime
 import AudioKit
 import AudioKitEX
+import Combine
 
 // Wrap an AudioKit AudioPlayer along with its active fade timer
 class AKAudioPlaybackHandler
@@ -30,6 +31,7 @@ class AKAudioPlaybackHandler
 class AKAudioManager: ObservableObject
 {
     static let shared = AKAudioManager()
+    private var fftProcessingCancellable: AnyCancellable?
     let numberOfStems: Int = 16
     
     // Fade durations (in seconds)
@@ -39,8 +41,6 @@ class AKAudioManager: ObservableObject
     // AudioKit engine and a mixer to combine multiple players.
     let engine = AudioEngine()
     let globalMixer = Mixer()
-    
-    var processorDisplayLinks: [UUID: (link: CADisplayLink, target: FFTDisplayLinkTarget)] = [:]
     
     // Dictionaries mapping an audio file’s name to its handler and data
     var handlers: [UUID: AKAudioPlaybackHandler] = [:]
@@ -58,6 +58,17 @@ class AKAudioManager: ObservableObject
         catch {
             print("Error starting AudioKit engine: \(error)")
         }
+        
+        fftProcessingCancellable = Timer.publish(every: 0.05, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                
+                // Process FFT data for each active audio file (using handlers keys)
+                for cellID in self.fftSampleData.keys {
+                    self.processFFTData(for: cellID)
+                }
+            }
     }
     
     
@@ -186,34 +197,21 @@ class AKAudioManager: ObservableObject
             return
         }
         
-        fftTaps[cellID]?.stop()
-        
-        let tap = FFTTap(handler.player, bufferSize: 1024, fftValidBinCount: .fiveHundredAndTwelve, callbackQueue: DispatchQueue.main)
-        { fftData in
-            self.fftSampleData[cellID] = fftData
+        if fftTaps[cellID] == nil
+        {
+            let tap = FFTTap(handler.player, bufferSize: 1024, fftValidBinCount: .fiveHundredAndTwelve, callbackQueue: DispatchQueue.main)
+            { fftData in
+                self.fftSampleData[cellID] = fftData
+            }
+            
+            tap.start()
+            fftTaps[cellID] = tap
         }
-        
-        tap.start()
-        fftTaps[cellID] = tap
-        
-        // Invalidate any existing display link for this audio file.
-        processorDisplayLinks[cellID]?.link.invalidate()
-        
-        // Create a new display link target.
-        let target = FFTDisplayLinkTarget(cellID: cellID, manager: self)
-        // Create a display link using that target.
-        let link = CADisplayLink(target: target, selector: #selector(FFTDisplayLinkTarget.update(displayLink:)))
-        link.add(to: .main, forMode: .common)
-        
-        processorDisplayLinks[cellID] = (link, target)
     }
 
     func stopFFTAnalysis(for cellID: UUID)
     {
         bandedSampleData[cellID] = [Float](repeating: 0.0, count: numberOfStems)
-        
-        processorDisplayLinks[cellID]?.link.invalidate()
-        processorDisplayLinks.removeValue(forKey: cellID)
         
         fftTaps[cellID]?.stop()
         fftTaps.removeValue(forKey: cellID)
@@ -239,7 +237,7 @@ class AKAudioManager: ObservableObject
                 sampleIndex += 1
             }
             
-            let average = sampleSum / Float(sampleIndex)
+            let average = sampleSum / Float(sampleIndex + 1)
             var bandValue = average * (handlers[cellID]?.sampleDataScaler ?? 0.0) * 10
             if bandValue.isNaN {
                 bandValue = 0
@@ -253,22 +251,5 @@ class AKAudioManager: ObservableObject
         print("----------------------------------------------------------------------")
         
         bandedSampleData[cellID] = accruedSampleData
-    }
-}
-
-// Processor Uppdate Handler
-class FFTDisplayLinkTarget
-{
-    let cellID: UUID
-    weak var manager: AKAudioManager?
-    
-    init(cellID: UUID, manager: AKAudioManager) {
-        self.cellID = cellID
-        self.manager = manager
-    }
-    
-    @objc func update(displayLink: CADisplayLink) {
-        // Call the FFT processing function for this audio file.
-        manager?.processFFTData(for: cellID)
     }
 }
