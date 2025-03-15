@@ -146,7 +146,7 @@ struct SceneView: View
             .background(toolbarBackground)
             
             // Body Section
-            ZStack
+            ZStack ()
             {
                 LazyVGrid (columns: columns, spacing: globalSpacing)
                 {

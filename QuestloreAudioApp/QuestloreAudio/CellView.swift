@@ -28,46 +28,20 @@ struct AudioCell: View
     
     @State var audioData = [Float](repeating: 0, count: 16)
     
-    // Computed property for the background color based on the color scheme.
+    // Computed property for the background color based on the color scheme
     var backgroundColor: Color
     {
         colorScheme == .dark ? Color(hex: "222222") : Color.white
     }
     
-    // Build the cell.
     var body: some View
     {
         ZStack
         {
             VStack (spacing: 0)
             {
-                GeometryReader
-                { geometry in
-                    let minStemHeight = geometry.size.height * 0.068
-                    let maxStemHeight = geometry.size.height * 0.75
-                    
-                    HStack (spacing: geometry.size.width * 0.034)
-                    {
-                        Spacer(minLength: 0)
-                        
-                        ForEach (0..<16, id: \.self)
-                        { index in
-                            let normalisedSample = min(1.0, audioData[index] / 50.0)
-                            let computedStemHeight = minStemHeight + (maxStemHeight - minStemHeight) * CGFloat(normalisedSample)
-                            
-                            VisualiserStem(
-                                color: cellModel.cellData.accentColor,
-                                minHeight: minStemHeight,
-                                height: computedStemHeight
-                            )
-                        }
-                        
-                        Spacer(minLength: 0)
-                    }
-                }
-                
-                ScaledText(text: cellModel.cellData.label)
-                    .foregroundColor(cellModel.cellData.accentColor)
+                AudioVisualiser(cellModel: cellModel, audioData: audioData)
+                ScaledText(cellModel: cellModel)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -150,6 +124,42 @@ struct AudioCell: View
 }
 
 
+struct AudioVisualiser: View
+{
+    var cellModel: AudioCellModel
+    var audioData = [Float](repeating: 0, count: 16)
+    
+    var body: some View
+    {
+        GeometryReader
+        { geometry in
+            let minStemHeight = geometry.size.height * 0.068
+            let maxStemHeight = geometry.size.height * 0.82
+            
+            HStack (spacing: geometry.size.width * 0.034)
+            {
+                Spacer(minLength: 0)
+                
+                ForEach (0..<16, id: \.self)
+                { index in
+                    let normalisedSample = min(1.0, audioData[index])
+                    let computedStemHeight = minStemHeight + (maxStemHeight - minStemHeight) * CGFloat(normalisedSample)
+                    
+                    VisualiserStem(
+                        color: cellModel.cellData.accentColor,
+                        minHeight: minStemHeight,
+                        height: computedStemHeight
+                    )
+                }
+                
+                Spacer(minLength: 0)
+            }
+            .frame(minHeight: geometry.size.height * 1.1)
+        }
+    }
+}
+
+
 struct VisualiserStem: View, Animatable
 {
     var color: Color = .blue
@@ -179,15 +189,21 @@ struct VisualiserStem: View, Animatable
 
 struct ScaledText: View
 {
-    let text: String
+    let cellModel: AudioCellModel
     var body: some View
     {
         GeometryReader
         { geometry in
-            Text(text)
+            Text(cellModel.cellData.label)
+                .foregroundColor(cellModel.cellData.accentColor)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
                 .font(.system(size: geometry.size.width * 0.08))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(geometry.size.width * 0.06)
+//                .border(.green)
+                .padding(.top, geometry.size.width * 0.058)
+                .padding(.horizontal, geometry.size.width * 0.06)
+                .padding(.bottom, geometry.size.width * 0.028)
         }
     }
 }
@@ -397,7 +413,7 @@ struct AudioCell_Previews: PreviewProvider {
                 )
                 AudioCell(
                     cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
+                        cellData: AudioCellData(audio: "test.mp3", label: "Preview Bing Bong Ding Dong", accentColor: .blue)
                     ),
                     onToggle: { print("Cell toggled!") },
                     onSolo: { print("Cell soloed!") }
