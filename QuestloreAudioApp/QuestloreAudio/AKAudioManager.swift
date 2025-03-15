@@ -9,6 +9,7 @@ import Foundation
 import AVFoundation // For AVAudioFile reading
 import QuartzCore // For CACurrentMediaTime
 import AudioKit
+import AudioKitEX
 
 // Wrap an AudioKit AudioPlayer along with its active fade timer
 class AKAudioPlaybackHandler
@@ -16,13 +17,11 @@ class AKAudioPlaybackHandler
     let player: AudioPlayer
     var fadeTimer: Timer?
     
-    init(player: AudioPlayer)
-    {
+    init(player: AudioPlayer) {
         self.player = player
     }
     
-    deinit
-    {
+    deinit {
         fadeTimer?.invalidate()
     }
 }
@@ -37,7 +36,7 @@ class AKAudioManager: ObservableObject
     
     // AudioKit engine and a mixer to combine multiple players.
     let engine = AudioEngine()
-    let mixer = Mixer()
+    let globalMixer = Mixer()
     
     var processorDisplayLinks: [String: (link: CADisplayLink, target: FFTDisplayLinkTarget)] = [:]
     
@@ -49,7 +48,7 @@ class AKAudioManager: ObservableObject
     
     private init()
     {
-        engine.output = mixer
+        engine.output = globalMixer
         
         do {
             try engine.start()
@@ -138,8 +137,8 @@ class AKAudioManager: ObservableObject
             player.volume = 0.0
             player.isLooping = true
             
-            // Add player to Mixer and start playback
-            mixer.addInput(player)
+            // Add player to global mixer and start playback
+            globalMixer.addInput(player)
             player.play()
             
             let handler = AKAudioPlaybackHandler(player: player)
@@ -166,9 +165,10 @@ class AKAudioManager: ObservableObject
         
         fade(handler: handler, toVolume: 0.0, duration: fadeOutDuration)
         {
-            handler.player.stop()
             self.stopFFTAnalysis(for: audioFileName)
-            self.mixer.removeInput(handler.player)
+            
+            handler.player.stop()
+            self.globalMixer.removeInput(handler.player)
             self.handlers.removeValue(forKey: audioFileName)
         }
     }
@@ -243,9 +243,7 @@ class AKAudioManager: ObservableObject
     }
 }
 
-
-// MARK: Processor Uppdate Handler
-
+// Processor Uppdate Handler
 class FFTDisplayLinkTarget
 {
     let audioFileName: String
