@@ -26,6 +26,8 @@ struct AudioCell: View
     // Detect the device theme
     @Environment(\.colorScheme) var colorScheme
     
+    @State var audioData = [Float](repeating: 0, count: 16)
+    
     // Computed property for the background color based on the color scheme.
     var backgroundColor: Color
     {
@@ -41,22 +43,27 @@ struct AudioCell: View
             {
                 GeometryReader
                 { geometry in
+                    let minStemHeight = geometry.size.height * 0.068
+                    let maxStemHeight = geometry.size.height * 0.75
+                    
                     HStack (spacing: geometry.size.width * 0.034)
                     {
                         Spacer(minLength: 0)
                         
-                        ForEach (1...16, id: \.self)
-                        { number in
+                        ForEach (0..<16, id: \.self)
+                        { index in
+                            let normalisedSample = min(1.0, audioData[index] / 50.0)
+                            let computedStemHeight = minStemHeight + (maxStemHeight - minStemHeight) * CGFloat(normalisedSample)
+                            
                             VisualiserStem(
                                 color: cellModel.cellData.accentColor,
-                                minHeight: geometry.size.height * 0.068
+                                minHeight: minStemHeight,
+                                height: computedStemHeight
                             )
                         }
-//                        .border(.green) // for debugging
                         
                         Spacer(minLength: 0)
                     }
-//                    .border(.red) // for debugging
                 }
                 
                 ScaledText(text: cellModel.cellData.label)
@@ -134,6 +141,11 @@ struct AudioCell: View
             )
             .allowsHitTesting(false)
         )
+        .onReceive(AKAudioManager.shared.$bandedSampleData) { newData in
+            if let updatedBands = newData[cellModel.cellData.audio] {
+                audioData = updatedBands
+            }
+        }
     }
 }
 
@@ -196,9 +208,9 @@ struct CellBorder: View, Animatable
     var isInverted: Bool
     
     var animatableData: CGFloat {
-            get { progress }
-            set { progress = newValue }
-        }
+        get { progress }
+        set { progress = newValue }
+    }
     
     private var animatedStops: [Gradient.Stop]
     {
@@ -235,7 +247,6 @@ struct CellBorder: View, Animatable
         .mask(RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(lineWidth: lineWidth)
         )
-//        .drawingGroup()
     }
 }
 

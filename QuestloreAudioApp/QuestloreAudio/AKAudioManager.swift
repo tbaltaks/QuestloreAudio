@@ -27,7 +27,7 @@ class AKAudioPlaybackHandler
     }
 }
 
-class AKAudioManager
+class AKAudioManager: ObservableObject
 {
     static let shared = AKAudioManager()
     
@@ -39,12 +39,13 @@ class AKAudioManager
     let engine = AudioEngine()
     let mixer = Mixer()
     
+    var processorDisplayLinks: [String: (link: CADisplayLink, target: FFTDisplayLinkTarget)] = [:]
+    
     // Dictionaries mapping an audio file’s name to its handler and data
     var handlers: [String: AKAudioPlaybackHandler] = [:]
     var fftTaps: [String: FFTTap] = [:]
     var fftSampleData: [String: [Float]] = [:]
-    var bandedSampleData: [String: [Float]] = [:]
-    var processorDisplayLinks: [String: (link: CADisplayLink, target: FFTDisplayLinkTarget)] = [:]
+    @Published var bandedSampleData: [String: [Float]] = [:]
     
     private init()
     {
@@ -167,7 +168,6 @@ class AKAudioManager
         {
             handler.player.stop()
             self.stopFFTAnalysis(for: audioFileName)
-            
             self.mixer.removeInput(handler.player)
             self.handlers.removeValue(forKey: audioFileName)
         }
