@@ -55,7 +55,7 @@ class AudioCellModel: ObservableObject, Identifiable
         if isActive { return }
         
         isActive = true
-        AKAudioManager.shared.playAudio(for: cellData)
+        AudioManager.shared.playAudio(for: cellData)
     }
     
     func Deactivate()
@@ -63,7 +63,7 @@ class AudioCellModel: ObservableObject, Identifiable
         if !isActive { return }
         
         isActive = false
-        AKAudioManager.shared.stopAudio(for: cellData)
+        AudioManager.shared.stopAudio(for: cellData)
     }
     
     
@@ -120,7 +120,6 @@ class AudioGridModel: ObservableObject
     init(cellDataArray: [AudioCellData])
     {
         self.cells = cellDataArray.map { AudioCellModel(cellData: $0) }
-//        AKAudioManager.shared.preloadAudio(for: cellDataArray)
     }
     
     func ToggleCell(_ cell: AudioCellModel)

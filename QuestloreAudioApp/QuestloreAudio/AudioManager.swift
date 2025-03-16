@@ -4,27 +4,27 @@
 //
 //  Created by Tom Baltaks on 7/3/2025.
 //
-import Foundation
-import AVFoundation   // For AVAudioFile, AVAudioEngine, etc.
-import QuartzCore     // For CACurrentMediaTime
-import Combine
-import Accelerate    // For FFT processing
 
-// Wrap an AVAudioPlayerNode along with its active fade timer.
+import Foundation
+import AVFoundation
+import QuartzCore // For CACurrentMediaTime
+import Combine
+import Accelerate
+
+// Wrap an AVAudioPlayer along with its active fade timer.
 class AudioPlaybackHandler {
-    let playerNode: AVAudioPlayerNode
+    let player: AVAudioPlayer
     var fadeTimer: Timer?
     var sampleDataScaler: Float = 0.0
 
-    init(playerNode: AVAudioPlayerNode) {
-        self.playerNode = playerNode
+    init(player: AVAudioPlayer) {
+        self.player = player
     }
 
     deinit {
         fadeTimer?.invalidate()
     }
 }
-
 
 class AudioManager: ObservableObject {
     static let shared = AudioManager()
@@ -35,67 +35,54 @@ class AudioManager: ObservableObject {
     let fadeInDuration: TimeInterval = 4.0
     let fadeOutDuration: TimeInterval = 4.0
 
-    // AVAudioEngine and a global mixer.
-    let engine = AVAudioEngine()
-    var globalMixer = AVAudioMixerNode()
-
-    // Dictionaries mapping a cell's UUID to its playback handler and FFT data.
+    // AVAudioPlayer-based playback.
     var handlers: [UUID: AudioPlaybackHandler] = [:]
-    var preloadedBuffers: [UUID: AVAudioPCMBuffer] = [:]
+    
+    // We'll store the corresponding AVAudioFile (for FFT processing) for each audio file.
+    var audioFiles: [UUID: AVAudioFile] = [:]
+    
+    // Published FFT-processed band data.
     @Published var bandedSampleData: [UUID: [Float]] = [:]
-
-    // We'll also keep raw FFT sample data per cell (for debugging or further processing).
+    
+    // Raw FFT sample data per cell (array of 512 values, for example).
     var fftSampleData: [UUID: [Float]] = [:]
-
-    private init()
-    {
-//        engine.attach(globalMixer)
-//        engine.connect(globalMixer, to: engine.mainMixerNode, format: nil)
-//
-//        do {
-//            try engine.start()
-//        } catch {
-//            print("Error starting AVAudioEngine: \(error)")
-//        }
-//
-//        // Global FFT processing using Combine Timer – update at 20 Hz.
-//        fftProcessingCancellable = Timer.publish(every: 0.05, on: .main, in: .common)
-//            .autoconnect()
-//            .sink { [weak self] _ in
-//                guard let self = self else { return }
-//                // Process FFT for each cell that currently has FFT sample data.
-//                for cellID in self.fftSampleData.keys {
-//                    self.processFFTData(for: cellID)
-//                }
-//            }
+    
+    private init() {
+        // Start a global Combine timer to update FFT processing.
+        fftProcessingCancellable = Timer.publish(every: 0.05, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                for cellID in self.audioFiles.keys {
+                    self.processFFTData(for: cellID)
+                }
+            }
     }
-
+    
     // MARK: - Fade Logic
-    // Fades the player's volume (via playerNode's output volume) using a Timer.
     private func fade(handler: AudioPlaybackHandler, toVolume targetVolume: Float, duration: TimeInterval, completion: (() -> Void)? = nil) {
-        let startVolume = handler.playerNode.volume
+        let startVolume = handler.player.volume
         let startTime = CACurrentMediaTime()
-
+        
         handler.fadeTimer?.invalidate()
-
         handler.fadeTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { timer in
             let elapsed = CACurrentMediaTime() - startTime
             let t = Float(min(elapsed / duration, 1.0))
             let easedT = self.easeInOutKe(t, isFadingIn: targetVolume != 0)
             let newVolume = startVolume + (targetVolume - startVolume) * easedT
-            handler.playerNode.volume = newVolume
+            handler.player.volume = newVolume
             handler.sampleDataScaler = newVolume
-
+            
             if t >= 1.0 {
                 timer.invalidate()
                 handler.fadeTimer = nil
-                handler.playerNode.volume = targetVolume
+                handler.player.volume = targetVolume
                 handler.sampleDataScaler = targetVolume
                 completion?()
             }
         }
     }
-
+    
     private func easeInOutKe(_ t: Float, isFadingIn: Bool) -> Float {
         if isFadingIn {
             return pow(t, 3.6) * (2.8 - 1.8 * pow(t, 2))
@@ -103,161 +90,164 @@ class AudioManager: ObservableObject {
             return pow(t, 2.5) * (3 - 2 * pow(t, 1.25))
         }
     }
-
+    
     // MARK: - Audio Control
-    // Plays an audio file (by cell) with a fade-in effect using AVAudioPlayerNode.
     func playAudio(for cell: AudioCellData) {
-        // If we already have a player for this cell, reuse it.
+        // If already playing, simply fade in.
         if let handler = handlers[cell.id] {
             handler.fadeTimer?.invalidate()
             fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
-            startFFTAnalysis(for: cell.id)
             return
         }
-
-        // Locate the file in the main bundle.
+        
         guard let url = Bundle.main.url(forResource: cell.audio, withExtension: nil) else {
             print("Audio file \(cell.audio) not found!")
             return
         }
-
+        
         do {
-            // Read the file.
-            let file = try AVAudioFile(forReading: url)
-
-            // Use a preloaded buffer if available; otherwise, load it now.
-            let buffer: AVAudioPCMBuffer
-            if let preBuffer = preloadedBuffers[cell.id] {
-                buffer = preBuffer
-            } else {
-                guard let loadedBuffer = try AVAudioPCMBuffer(file: file) else {
-                    print("Could not load buffer for \(cell.audio)")
-                    return
-                }
-                buffer = loadedBuffer
-                preloadedBuffers[cell.id] = buffer
-            }
-
-            // Create an AVAudioPlayerNode.
-            let playerNode = AVAudioPlayerNode()
-            engine.attach(playerNode)
-            // Connect the player node to the engine's main mixer.
-            engine.connect(playerNode, to: globalMixer, format: buffer.format)
-
-            // Schedule the buffer for looping.
-            playerNode.scheduleBuffer(buffer, at: nil, options: .loops, completionHandler: nil)
-
-            // Start playback.
-            try engine.start()  // Engine is already started in init; this is safe.
-            playerNode.play()
-
-            // Create and store the handler.
-            let handler = AudioPlaybackHandler(playerNode: playerNode)
+            // Create AVAudioPlayer for playback.
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.volume = 0.0
+            player.numberOfLoops = -1
+            player.prepareToPlay()
+            player.play()
+            
+            let handler = AudioPlaybackHandler(player: player)
             handlers[cell.id] = handler
-
-            // Fade in and start FFT analysis.
+            
+            // Also open an AVAudioFile for FFT processing.
+            let audioFile = try AVAudioFile(forReading: url)
+            audioFiles[cell.id] = audioFile
+            
             fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
-            startFFTAnalysis(for: cell.id)
-        } catch {
+        }
+        catch {
             print("Error playing audio: \(error)")
         }
     }
-
-    // Stops an audio file (by cell) with a fade-out effect.
+    
     func stopAudio(for cell: AudioCellData) {
         guard let handler = handlers[cell.id] else {
             print("No audio is playing for \(cell.audio)")
             return
         }
-
+        
         handler.fadeTimer?.invalidate()
-
         fade(handler: handler, toVolume: 0.0, duration: fadeOutDuration) {
-            handler.playerNode.stop()
-            self.stopFFTAnalysis(for: cell.id)
-            self.engine.detach(handler.playerNode)
+            handler.player.stop()
             self.handlers.removeValue(forKey: cell.id)
+            self.audioFiles.removeValue(forKey: cell.id)
+            self.fftSampleData.removeValue(forKey: cell.id)
+            self.bandedSampleData[cell.id] = [Float](repeating: 0.0, count: self.numberOfStems)
         }
     }
-
-    // MARK: - Audio Analysis
-    // Installs an FFT tap on the player's output.
-    func startFFTAnalysis(for cellID: UUID) {
-        guard let handler = handlers[cellID] else {
-            print("No player found for \(cellID)")
+    
+    // MARK: - FFT Analysis and Processing
+    // We’re now implementing our own FFT processing.
+    // We'll read a fixed number of samples (e.g., 1024, but use only the first 512 for processing)
+    // from the AVAudioFile based on the player's currentTime, perform a windowing function,
+    // then perform an FFT using vDSP, and then group the FFT magnitudes into numberOfStems bands.
+    func processFFTData(for cellID: UUID) {
+        guard let audioFile = audioFiles[cellID],
+              let player = handlers[cellID]?.player else {
             return
         }
-
-        // Remove any existing tap.
-        handler.playerNode.removeTap(onBus: 0)
-
-        // Install a tap on bus 0.
-        handler.playerNode.installTap(onBus: 0, bufferSize: 1024, format: handler.playerNode.outputFormat(forBus: 0)) { (buffer, when) in
-            // Process the buffer to generate FFT data.
-            let fftData = self.processBuffer(buffer: buffer)
-            DispatchQueue.main.async {
-                self.fftSampleData[cellID] = fftData
+        
+        let sampleRate = audioFile.processingFormat.sampleRate
+        let currentTime = player.currentTime
+        let startFrame = AVAudioFramePosition(currentTime * sampleRate)
+        let frameCount: AVAudioFrameCount = 1024
+        
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: audioFile.processingFormat, frameCapacity: frameCount) else {
+            return
+        }
+        
+        do {
+            audioFile.framePosition = startFrame
+            try audioFile.read(into: buffer, frameCount: frameCount)
+        } catch {
+            print("Error reading audio for FFT: \(error)")
+            return
+        }
+        
+        // Assume mono signal for simplicity.
+        guard let channelData = buffer.floatChannelData?[0] else { return }
+        let sampleCount = Int(buffer.frameLength)
+        let samples = Array(UnsafeBufferPointer(start: channelData, count: sampleCount))
+        
+        // Apply a Hanning window.
+        var window = [Float](repeating: 0, count: sampleCount)
+        vDSP_hann_window(&window, vDSP_Length(sampleCount), Int32(vDSP_HANN_NORM))
+        var windowedSamples = [Float](repeating: 0, count: sampleCount)
+        vDSP_vmul(samples, 1, window, 1, &windowedSamples, 1, vDSP_Length(sampleCount))
+        
+        // Create FFT setup.
+        guard let fftSetup = vDSP_create_fftsetup(vDSP_Length(log2(Float(sampleCount))), FFTRadix(FFT_RADIX2)) else { return }
+        
+        // Prepare a DSPSplitComplex to hold FFT input.
+        var realp = [Float](repeating: 0, count: sampleCount/2)
+        var imagp = [Float](repeating: 0, count: sampleCount/2)
+        realp.withUnsafeMutableBufferPointer { realPtr in
+            imagp.withUnsafeMutableBufferPointer { imagPtr in
+                var complexBuffer = DSPSplitComplex(realp: realPtr.baseAddress!, imagp: imagPtr.baseAddress!)
+                
+                windowedSamples.withUnsafeBufferPointer { pointer in
+                    pointer.baseAddress!.withMemoryRebound(to: DSPComplex.self, capacity: sampleCount) { typeConvertedTransferBuffer in
+                        vDSP_ctoz(typeConvertedTransferBuffer, 2, &complexBuffer, 1, vDSP_Length(sampleCount/2))
+                    }
+                }
+                
+                // Perform the FFT.
+                vDSP_fft_zrip(fftSetup, &complexBuffer, 1, vDSP_Length(log2(Float(sampleCount))), FFTDirection(FFT_FORWARD))
+                
+                // Compute magnitudes.
+                var fftMagnitudes = [Float](repeating: 0.0, count: sampleCount/2)
+                vDSP_zvabs(&complexBuffer, 1, &fftMagnitudes, 1, vDSP_Length(sampleCount/2))
+                
+                // Save the raw FFT data.
+                DispatchQueue.main.async {
+                    self.fftSampleData[cellID] = fftMagnitudes
+                }
+                
+                // Now process the FFT data into bands.
+                var accruedSampleData = [Float](repeating: 0.0, count: numberOfStems)
+                var sampleIndex = 0
+                var rawSampleCount: Float = 1.0
+                
+                for i in 0..<numberOfStems {
+                    var sampleSum: Float = 0.0
+                    let roundedSampleCount = Int(round(rawSampleCount))
+                    
+                    for _ in 0..<roundedSampleCount {
+                        if sampleIndex < fftMagnitudes.count {
+                            sampleSum += fftMagnitudes[sampleIndex] * Float(sampleIndex + 1)
+                            sampleIndex += 1
+                        } else {
+                            break
+                        }
+                    }
+                    
+                    let average: Float = sampleIndex > 0 ? sampleSum / Float(sampleIndex) : 0
+                    let scaler = self.handlers[cellID]?.sampleDataScaler ?? 0.0
+                    var bandValue = average * scaler * 10
+                    if bandValue.isNaN {
+                        bandValue = 0
+                    }
+                    
+                    accruedSampleData[i] = bandValue
+                    rawSampleCount *= 1.39366
+                    print("Stem \(i + 1) for \(cellID): \(accruedSampleData[i])")
+                }
+                print("-------------------------------hell-yea--------------------------------------")
+                
+                // Save the processed band data.
+                DispatchQueue.main.async {
+                    self.bandedSampleData[cellID] = accruedSampleData
+                }
             }
         }
-    }
-
-    func stopFFTAnalysis(for cellID: UUID) {
-        bandedSampleData[cellID] = [Float](repeating: 0.0, count: numberOfStems)
-        if let handler = handlers[cellID] {
-            handler.playerNode.removeTap(onBus: 0)
-        }
-        fftSampleData.removeValue(forKey: cellID)
-    }
-
-    // Process the tapped buffer to generate FFT sample data.
-    // This is a placeholder – you need to implement FFT using vDSP.
-    func processBuffer(buffer: AVAudioPCMBuffer) -> [Float] {
-        // Assume mono signal; otherwise, you may average channels.
-        guard let channelData = buffer.floatChannelData?[0] else { return [] }
-        let frameCount = Int(buffer.frameLength)
-
-        // Copy the buffer data into an array.
-        let samples = Array(UnsafeBufferPointer(start: channelData, count: frameCount))
-
-        // Perform FFT on 'samples' using vDSP.
-        // For example, create a setup, perform FFT, compute magnitudes.
-        // Then return an array of FFT magnitudes (of length 512 if using 1024 buffer).
-        // This implementation is left as an exercise – there are many tutorials online.
-        return performFFT(samples: samples)
-    }
-
-    // Example placeholder function for FFT processing.
-    func performFFT(samples: [Float]) -> [Float] {
-        // Implement FFT using vDSP.
-        // Return an array of Float values representing the FFT magnitudes.
-        // For now, return an array of zeros of length 512.
-        return [Float](repeating: 0.0, count: 512)
-    }
-
-    // MARK: - FFT Band Processing
-    // Process the raw FFT sample data into 'numberOfStems' bands.
-    func processFFTData(for cellID: UUID) {
-        guard let fftSamples = fftSampleData[cellID], fftSamples.count >= 512 else { return }
-        var accruedSampleData = [Float](repeating: 0.0, count: numberOfStems)
-        var sampleIndex = 0
-        var rawSampleCount: Float = 1.0
-
-        for i in 0..<numberOfStems {
-            var sampleSum: Float = 0.0
-            let roundedSampleCount = Int(round(rawSampleCount))
-            for _ in 0..<roundedSampleCount {
-                guard sampleIndex < fftSamples.count else { break }
-                sampleSum += fftSamples[sampleIndex] * Float(sampleIndex + 1)
-                sampleIndex += 1
-            }
-            let average: Float = sampleIndex > 0 ? sampleSum / Float(sampleIndex) : 0
-            var bandValue = average * (handlers[cellID]?.sampleDataScaler ?? 0.0) * 10
-            if bandValue.isNaN { bandValue = 0 }
-            accruedSampleData[i] = bandValue
-            rawSampleCount *= 1.39366
-            print("Stem \(i + 1) for \(cellID): \(accruedSampleData[i])")
-        }
-        print("----------------------------------------------------------------------")
-        bandedSampleData[cellID] = accruedSampleData
+        
+        vDSP_destroy_fftsetup(fftSetup)
     }
 }
