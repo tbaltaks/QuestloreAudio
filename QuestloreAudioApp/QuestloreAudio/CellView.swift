@@ -115,7 +115,7 @@ struct AudioCell: View
             )
             .allowsHitTesting(false)
         )
-        .onReceive(AKAudioManager.shared.$bandedSampleData) { newData in
+        .onReceive(AKAudioManagerOld.shared.$bandedSampleData) { newData in
             if let updatedBands = newData[cellModel.cellData.id] {
                 audioData = updatedBands
             }
