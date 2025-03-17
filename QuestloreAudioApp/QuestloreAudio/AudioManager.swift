@@ -169,6 +169,7 @@ class AudioManager: ObservableObject
         // Assume mono signal for simplicity.
         guard let channelData = buffer.floatChannelData?[0] else { return }
         let sampleCount = Int(buffer.frameLength)
+        let halfSampleCount = sampleCount / 2
         let samples = Array(UnsafeBufferPointer(start: channelData, count: sampleCount))
         
         // Apply a Hanning window.
@@ -179,32 +180,38 @@ class AudioManager: ObservableObject
         // Create FFT setup.
         guard let fftSetup = vDSP_create_fftsetup(vDSP_Length(log2(Float(sampleCount))), FFTRadix(FFT_RADIX2)) else { return }
         
-        // Prepare a DSPSplitComplex to hold FFT input.
-        var realp = [Float](repeating: 0, count: sampleCount/2)
-        var imagp = [Float](repeating: 0, count: sampleCount/2)
+        // Prepare a DSPSplitComplex to hold FFT input
+        var realp = [Float](repeating: 0, count: halfSampleCount)
+        var imagp = [Float](repeating: 0, count: halfSampleCount)
         realp.withUnsafeMutableBufferPointer { realPtr in
             imagp.withUnsafeMutableBufferPointer { imagPtr in
                 var complexBuffer = DSPSplitComplex(realp: realPtr.baseAddress!, imagp: imagPtr.baseAddress!)
                 
                 windowedSamples.withUnsafeBufferPointer { pointer in
                     pointer.baseAddress!.withMemoryRebound(to: DSPComplex.self, capacity: sampleCount) { typeConvertedTransferBuffer in
-                        vDSP_ctoz(typeConvertedTransferBuffer, 2, &complexBuffer, 1, vDSP_Length(sampleCount/2))
+                        vDSP_ctoz(typeConvertedTransferBuffer, 2, &complexBuffer, 1, vDSP_Length(halfSampleCount))
                     }
                 }
                 
-                // Perform the FFT.
+                // Perform the FFT
                 vDSP_fft_zrip(fftSetup, &complexBuffer, 1, vDSP_Length(log2(Float(sampleCount))), FFTDirection(FFT_FORWARD))
                 
-                // Compute magnitudes.
-                var fftMagnitudes = [Float](repeating: 0.0, count: sampleCount/2)
-                vDSP_zvabs(&complexBuffer, 1, &fftMagnitudes, 1, vDSP_Length(sampleCount/2))
+                // Compute magnitudes
+                var fftMagnitudes = [Float](repeating: 0.0, count: halfSampleCount)
+                vDSP_zvabs(&complexBuffer, 1, &fftMagnitudes, 1, vDSP_Length(halfSampleCount))
                 
-                // Save the raw FFT data.
+                // Normalise magnitudes
+//                for i in 0..<fftMagnitudes.count
+//                {
+//                    fftMagnitudes[i] *= 1.0 / Float(halfSampleCount)
+//                }
+                
+                // Save the raw FFT data
                 DispatchQueue.main.async {
                     self.fftSampleData[cellID] = fftMagnitudes
                 }
                 
-                // Now process the FFT data into bands.
+                // Now process the FFT data into bands
                 var accruedSampleData = [Float](repeating: 0.0, count: numberOfStems)
                 var sampleIndex = 0
                 var rawSampleCount: Float = 2.0
