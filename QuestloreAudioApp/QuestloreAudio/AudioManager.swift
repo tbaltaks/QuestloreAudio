@@ -11,8 +11,9 @@ import QuartzCore // For CACurrentMediaTime
 import Combine
 import Accelerate
 
-// Wrap an AVAudioPlayer along with its active fade timer.
-class AudioPlaybackHandler {
+// Wrap an AVAudioPlayer along with its active fade timer
+class AudioPlaybackHandler
+{
     let player: AVAudioPlayer
     var fadeTimer: Timer?
     var sampleDataScaler: Float = 0.0
@@ -26,7 +27,8 @@ class AudioPlaybackHandler {
     }
 }
 
-class AudioManager: ObservableObject {
+class AudioManager: ObservableObject
+{
     static let shared = AudioManager()
     private var fftProcessingCancellable: AnyCancellable?
     let numberOfStems: Int = 16
@@ -35,21 +37,16 @@ class AudioManager: ObservableObject {
     let fadeInDuration: TimeInterval = 4.0
     let fadeOutDuration: TimeInterval = 4.0
 
-    // AVAudioPlayer-based playback.
+    // Dictionaries storing handler, audio files, and audio data (keyed by cell ID)
     var handlers: [UUID: AudioPlaybackHandler] = [:]
-    
-    // We'll store the corresponding AVAudioFile (for FFT processing) for each audio file.
     var audioFiles: [UUID: AVAudioFile] = [:]
-    
-    // Published FFT-processed band data.
+    var fftSampleData: [UUID: [Float]] = [:]
     @Published var bandedSampleData: [UUID: [Float]] = [:]
     
-    // Raw FFT sample data per cell (array of 512 values, for example).
-    var fftSampleData: [UUID: [Float]] = [:]
-    
-    private init() {
+    private init()
+    {
         // Start a global Combine timer to update FFT processing.
-        fftProcessingCancellable = Timer.publish(every: 0.05, on: .main, in: .common)
+        fftProcessingCancellable = Timer.publish(every: 0.02, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self = self else { return }
@@ -143,12 +140,10 @@ class AudioManager: ObservableObject {
         }
     }
     
+    
     // MARK: - FFT Analysis and Processing
-    // We’re now implementing our own FFT processing.
-    // We'll read a fixed number of samples (e.g., 1024, but use only the first 512 for processing)
-    // from the AVAudioFile based on the player's currentTime, perform a windowing function,
-    // then perform an FFT using vDSP, and then group the FFT magnitudes into numberOfStems bands.
-    func processFFTData(for cellID: UUID) {
+    func processFFTData(for cellID: UUID)
+    {
         guard let audioFile = audioFiles[cellID],
               let player = handlers[cellID]?.player else {
             return
@@ -177,8 +172,7 @@ class AudioManager: ObservableObject {
         let samples = Array(UnsafeBufferPointer(start: channelData, count: sampleCount))
         
         // Apply a Hanning window.
-        var window = [Float](repeating: 0, count: sampleCount)
-        vDSP_hann_window(&window, vDSP_Length(sampleCount), Int32(vDSP_HANN_NORM))
+        let window = vDSP.window(ofType: Float.self, usingSequence: .hamming, count: sampleCount, isHalfWindow: false)
         var windowedSamples = [Float](repeating: 0, count: sampleCount)
         vDSP_vmul(samples, 1, window, 1, &windowedSamples, 1, vDSP_Length(sampleCount))
         
@@ -215,11 +209,13 @@ class AudioManager: ObservableObject {
                 var sampleIndex = 0
                 var rawSampleCount: Float = 1.0
                 
-                for i in 0..<numberOfStems {
+                for i in 0..<numberOfStems
+                {
                     var sampleSum: Float = 0.0
                     let roundedSampleCount = Int(round(rawSampleCount))
                     
-                    for _ in 0..<roundedSampleCount {
+                    for _ in 0..<roundedSampleCount
+                    {
                         if sampleIndex < fftMagnitudes.count {
                             sampleSum += fftMagnitudes[sampleIndex] * Float(sampleIndex + 1)
                             sampleIndex += 1
@@ -230,7 +226,7 @@ class AudioManager: ObservableObject {
                     
                     let average: Float = sampleIndex > 0 ? sampleSum / Float(sampleIndex) : 0
                     let scaler = self.handlers[cellID]?.sampleDataScaler ?? 0.0
-                    var bandValue = average * scaler * 10
+                    var bandValue = average / 50 * scaler
                     if bandValue.isNaN {
                         bandValue = 0
                     }
@@ -239,7 +235,7 @@ class AudioManager: ObservableObject {
                     rawSampleCount *= 1.39366
                     print("Stem \(i + 1) for \(cellID): \(accruedSampleData[i])")
                 }
-                print("-------------------------------hell-yea--------------------------------------")
+                print("----------------------------------hell-yea--------------------------------------")
                 
                 // Save the processed band data.
                 DispatchQueue.main.async {

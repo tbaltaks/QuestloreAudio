@@ -181,7 +181,7 @@ struct VisualiserStem: View, Animatable
                 .fill(color)
                 .frame(minHeight: minHeight)
                 .frame(width: minHeight, height: height)
-                .animation(.easeInOut(duration: 0.3), value: height)
+                .animation(.easeInOut(duration: 0.38), value: height)
         }
     }
 }
