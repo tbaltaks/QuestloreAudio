@@ -149,6 +149,7 @@ class AudioManager: ObservableObject
             return
         }
         
+//        let peakAmplitude = audioFile.peak?.amplitude
         let sampleRate = audioFile.processingFormat.sampleRate
         let currentTime = player.currentTime
         let startFrame = AVAudioFramePosition(currentTime * sampleRate)
@@ -203,8 +204,12 @@ class AudioManager: ObservableObject
                 // Normalise magnitudes
 //                for i in 0..<fftMagnitudes.count
 //                {
-//                    fftMagnitudes[i] *= 1.0 / Float(halfSampleCount)
+//                    print("Magnitude \(i + 1): \(fftMagnitudes[i])")
+//                    fftMagnitudes[i] /= peakAmplitude ?? 1
+//                    print("Normalised Magnitude \(i + 1): \(fftMagnitudes[i])")
+//                    print("~~~  NEXT  ~~~")
 //                }
+//                print("----------------------------------oh-kayyy--------------------------------------")
                 
                 // Save the raw FFT data
                 DispatchQueue.main.async {
@@ -240,9 +245,9 @@ class AudioManager: ObservableObject
                     
                     accruedSampleData[i] = bandValue
                     rawSampleCount *= 1.28
-                    print("Stem \(i + 1) for \(cellID): \(accruedSampleData[i])")
+//                    print("Stem \(i + 1) for \(cellID): \(accruedSampleData[i])")
                 }
-                print("----------------------------------hell-yea--------------------------------------")
+//                print("----------------------------------hell-yea--------------------------------------")
                 
                 // Save the processed band data.
                 DispatchQueue.main.async {

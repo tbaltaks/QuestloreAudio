@@ -142,8 +142,7 @@ struct AudioVisualiser: View
                 
                 ForEach (0..<16, id: \.self)
                 { index in
-                    let normalisedSample = min(1.0, audioData[index])
-                    let computedStemHeight = minStemHeight + (maxStemHeight - minStemHeight) * CGFloat(normalisedSample)
+                    let computedStemHeight = min(minStemHeight + (maxStemHeight - minStemHeight) * CGFloat(audioData[index]), maxStemHeight)
                     
                     VisualiserStem(
                         color: cellModel.cellData.accentColor,
