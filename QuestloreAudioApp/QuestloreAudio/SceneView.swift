@@ -30,98 +30,104 @@ struct SceneView: View
     init()
     {
         // Array of cell data.
-        let allCellData: [AudioCellData] = [
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
-            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
-            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
-            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
-        ]
+        let allCellData =
+        
+        (1...100).map { _ in
+            AudioCellData(audio: "", label: "", accentColor: .gray)
+        }
+        
+//        [
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//            AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+//            AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
+//            AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
+//            AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
+//            AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
+//            AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+//        ]
         
         gridModel = AudioGridModel(cellDataArray: allCellData)
     }
@@ -131,22 +137,27 @@ struct SceneView: View
     
     var body: some View
     {
-        VStack(spacing: 0)
+        VStack (spacing: 0)
         {
             // Toolbar Section
-            HStack {
-                Spacer()
+            HStack
+            {
+                Spacer(minLength: 0)
+
                 Image("QLAudioLogo")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(height: 30)
-                Spacer()
+                    .frame(height: 36)
+                    .colorMultiply(.gray)
+                
+                Spacer(minLength: 0)
             }
-            .frame(height: 50)
+            .frame(height: 48)
             .background(toolbarBackground)
+//            .border(.red)
             
             // Body Section
-            ZStack ()
+            ScrollView
             {
                 LazyVGrid (columns: columns, spacing: globalSpacing)
                 {
@@ -161,14 +172,16 @@ struct SceneView: View
                         )
                     }
                 }
+                .padding(globalSpacing)
+                .drawingGroup()
+//                .border(.orange)
             }
-            .padding(globalSpacing)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(sceneBackground)
-            .drawingGroup()
+//            .border(.blue)
         }
-        .edgesIgnoringSafeArea(.horizontal)
-        .edgesIgnoringSafeArea(.bottom)
+        .edgesIgnoringSafeArea(.all)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(sceneBackground)
+//        .border(.yellow)
     }
     
     struct SceneView_Previews: PreviewProvider
