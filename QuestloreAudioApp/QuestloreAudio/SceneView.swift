@@ -200,3 +200,26 @@ struct SceneView: View
         }
     }
 }
+
+
+
+// MARK: Scene wrapper in order to hide nav-bar
+
+class HomeIndicatorHostingController<Content: View>: UIHostingController<Content>
+{
+    override var prefersHomeIndicatorAutoHidden: Bool {
+        return true
+    }
+}
+
+struct SceneViewWrapper: UIViewControllerRepresentable
+{
+    func makeUIViewController(context: Context) -> UIViewController {
+        // Wrap your SceneView in the custom hosting controller.
+        HomeIndicatorHostingController(rootView: SceneView())
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        // No update needed.
+    }
+}
