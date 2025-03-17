@@ -207,14 +207,14 @@ class AudioManager: ObservableObject
                 // Now process the FFT data into bands.
                 var accruedSampleData = [Float](repeating: 0.0, count: numberOfStems)
                 var sampleIndex = 0
-                var rawSampleCount: Float = 1.0
+                var rawSampleCount: Float = 2.0
                 
                 for i in 0..<numberOfStems
                 {
                     var sampleSum: Float = 0.0
-                    let roundedSampleCount = Int(round(rawSampleCount))
+                    let perBinSampleCount = i + 1 < numberOfStems ? Int(round(rawSampleCount)) : 512 - (sampleIndex + 1)
                     
-                    for _ in 0..<roundedSampleCount
+                    for _ in 0..<perBinSampleCount
                     {
                         if sampleIndex < fftMagnitudes.count {
                             sampleSum += fftMagnitudes[sampleIndex] * Float(sampleIndex + 1)
@@ -226,13 +226,13 @@ class AudioManager: ObservableObject
                     
                     let average: Float = sampleIndex > 0 ? sampleSum / Float(sampleIndex) : 0
                     let scaler = self.handlers[cellID]?.sampleDataScaler ?? 0.0
-                    var bandValue = average / 50 * scaler
+                    var bandValue = average / 80 * scaler
                     if bandValue.isNaN {
                         bandValue = 0
                     }
                     
                     accruedSampleData[i] = bandValue
-                    rawSampleCount *= 1.39366
+                    rawSampleCount *= 1.28
                     print("Stem \(i + 1) for \(cellID): \(accruedSampleData[i])")
                 }
                 print("----------------------------------hell-yea--------------------------------------")
