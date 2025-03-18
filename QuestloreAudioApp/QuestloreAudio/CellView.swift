@@ -26,8 +26,6 @@ struct AudioCell: View
     // Detect the device theme
     @Environment(\.colorScheme) var colorScheme
     
-    @State var audioData = [Float](repeating: 0, count: 16)
-    
     // Computed property for the background color based on the color scheme
     var backgroundColor: Color
     {
@@ -40,11 +38,28 @@ struct AudioCell: View
         {
             VStack (spacing: 0)
             {
-                AudioVisualiser(cellModel: cellModel, audioData: audioData)
+                AudioVisualiser(cellModel: cellModel)
                 ScaledText(cellModel: cellModel)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .aspectRatio(1.66, contentMode: .fit)
+        .background(backgroundColor)
+        .cornerRadius(12)
+        .overlay(CellBorder(
+                color: cellModel.cellData.accentColor,
+                progress: cellModel.borderProgress,
+                isInverted: cellModel.borderInverted
+            )
+            .allowsHitTesting(false)
+        )
+        .overlay(OuterCellBorder(
+                color: cellModel.cellData.accentColor,
+                progress: cellModel.outerBorderProgress,
+                isInverted: cellModel.outerBorderInverted
+            )
+            .allowsHitTesting(false)
+        )
         .contentShape(Rectangle()) // makes full area tappable
         .gesture(DragGesture(minimumDistance: 0)
             .onChanged
@@ -98,27 +113,20 @@ struct AudioCell: View
                 isSlowTapCompleted = false
             }
         )
-        .aspectRatio(1.66, contentMode: .fit)
-        .background(backgroundColor)
-        .cornerRadius(12)
-        .overlay(CellBorder(
-                color: cellModel.cellData.accentColor,
-                progress: cellModel.borderProgress,
-                isInverted: cellModel.borderInverted
-            )
-            .allowsHitTesting(false)
-        )
-        .overlay(OuterCellBorder(
-                color: cellModel.cellData.accentColor,
-                progress: cellModel.outerBorderProgress,
-                isInverted: cellModel.outerBorderInverted
-            )
-            .allowsHitTesting(false)
-        )
-        .onReceive(AudioManager.shared.$bandedSampleData) { newData in
-            if let updatedBands = newData[cellModel.cellData.id] {
-                audioData = updatedBands
-            }
+    }
+    
+    
+    struct SceneView_Previews: PreviewProvider
+    {
+        static var previews: some View
+        {
+            AudioStage()
+                .previewInterfaceOrientation(.landscapeRight)
+                .preferredColorScheme(.light)
+            
+            AudioStage()
+                .previewInterfaceOrientation(.landscapeRight)
+                .preferredColorScheme(.dark)
         }
     }
 }
@@ -127,7 +135,8 @@ struct AudioCell: View
 struct AudioVisualiser: View
 {
     var cellModel: AudioCellModel
-    var audioData = [Float](repeating: 0, count: 16)
+    
+    @State var audioData = [Float](repeating: 0, count: 16)
     
     var body: some View
     {
@@ -147,28 +156,31 @@ struct AudioVisualiser: View
                     VisualiserStem(
                         color: cellModel.cellData.accentColor,
                         minHeight: minStemHeight,
-                        height: computedStemHeight
+                        targetHeight: computedStemHeight
                     )
                 }
                 
                 Spacer(minLength: 0)
             }
             .frame(minHeight: geometry.size.height * 1.1)
+            .onReceive(AudioManager.shared.$bandedSampleData) { newData in
+                if let updatedBands = newData[cellModel.cellData.id] {
+                    audioData = updatedBands
+                }
+            }
         }
     }
 }
 
 
-struct VisualiserStem: View, Animatable
+struct VisualiserStem: View
 {
     var color: Color = .blue
     var minHeight: CGFloat
-    var height: CGFloat = 0
+    var targetHeight: CGFloat = 0
     
-    var animatableData: CGFloat {
-        get { height }
-        set { height = newValue }
-    }
+    @State private var height: CGFloat = 0
+    @State private var previousTargetHeight: CGFloat = 0
     
     var body: some View
     {
@@ -180,7 +192,21 @@ struct VisualiserStem: View, Animatable
                 .fill(color)
                 .frame(minHeight: minHeight)
                 .frame(width: minHeight, height: height)
-                .animation(.easeInOut(duration: 0.38), value: height)
+                .onAppear {
+                    height = targetHeight
+                    previousTargetHeight = targetHeight
+                }
+                .onChange(of: targetHeight) { newHeight in
+                    let animation = newHeight > previousTargetHeight
+                        ? Animation.easeInOut(duration: 0.2)
+                        : Animation.easeInOut(duration: 0.4)
+                    
+                    previousTargetHeight = newHeight
+                    
+                    withAnimation(animation) {
+                        height = newHeight
+                    }
+                }
         }
     }
 }
@@ -319,149 +345,6 @@ struct OuterCellBorder: View, Animatable
         .mask(RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(lineWidth: lineWidth)
         )
-    }
-}
-
-
-
-struct AudioCell_Previews: PreviewProvider {
-    static var previews: some View {
-        Group {
-            HStack {
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-            }
-            .previewLayout(.sizeThatFits)
-            .preferredColorScheme(.light)
-            .padding()
-            
-            
-            HStack {
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview Bing Bong Ding Dong", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-                
-                AudioCell(
-                    cellModel: AudioCellModel(
-                        cellData: AudioCellData(audio: "test.mp3", label: "Preview", accentColor: .blue)
-                    ),
-                    onToggle: { print("Cell toggled!") },
-                    onSolo: { print("Cell soloed!") }
-                )
-            }
-            .previewLayout(.sizeThatFits)
-            .preferredColorScheme(.dark)
-            .padding()
-        }
     }
 }
     

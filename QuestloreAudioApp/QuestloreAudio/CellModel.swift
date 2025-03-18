@@ -113,7 +113,7 @@ class AudioCellModel: ObservableObject, Identifiable
 }
 
 
-class AudioGridModel: ObservableObject
+class AudioCellGridModel: ObservableObject
 {
     @Published var cells: [AudioCellModel]
     
@@ -163,6 +163,21 @@ class AudioGridModel: ObservableObject
         for other in cells where other.id != cell.id && other.isActive
         {
             other.Deactivate()
+        }
+    }
+    
+    
+    struct SceneView_Previews: PreviewProvider
+    {
+        static var previews: some View
+        {
+            AudioStage()
+                .previewInterfaceOrientation(.landscapeRight)
+                .preferredColorScheme(.light)
+            
+            AudioStage()
+                .previewInterfaceOrientation(.landscapeRight)
+                .preferredColorScheme(.dark)
         }
     }
 }
