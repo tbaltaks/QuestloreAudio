@@ -18,6 +18,7 @@ struct AudioStage: View
     }
     
     @ObservedObject var gridModel: AudioCellGridModel
+    @State private var contentHeight: CGFloat = 0
     
     init()
     {
@@ -35,10 +36,15 @@ struct AudioStage: View
             {
                 // Toolbar Section
                 Toolbar()
-    //            .border(.red)
+                .background(GeometryReader { geometry in
+                    Color.clear
+//                        .border(.green)
+                        .preference(key: ContentHeightKey.self, value: geometry.size.height)
+                })
+//                .border(.red)
                 
                 // Body Section
-                VStack
+                ScrollView
                 {
                     LazyVGrid (columns: columns, spacing: globalSpacing)
                     {
@@ -53,18 +59,29 @@ struct AudioStage: View
                             )
                         }
                     }
-    //                .border(.orange)
+                    .padding(globalSpacing)
+                    .drawingGroup()
+                    .background(GeometryReader { geometry in
+                        Color.clear
+//                            .border(.green)
+                            .preference(key: ContentHeightKey.self, value: geometry.size.height)
+                    })
+//                    .border(.orange)
                 }
-                .padding(globalSpacing)
-                .drawingGroup()
-    //            .border(.blue)
+                .scrollDisabled(contentHeight < UIScreen.currentBounds.height + 10)
+//                .border(.blue)
             }
-//            .border(.yellow)
+            .frame(
+                width: UIScreen.currentBounds.width,
+                height: UIScreen.currentBounds.height,
+                alignment: .top)
             .background(sceneBackground)
-            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
             .edgesIgnoringSafeArea(.all)
+            .onPreferenceChange(ContentHeightKey.self) { height in
+                contentHeight = height
+                print("Content height: \(height)")
+            }
         }
-        
     }
     
     
@@ -80,5 +97,29 @@ struct AudioStage: View
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.dark)
         }
+    }
+}
+
+
+// PreferenceKey for height tracking
+struct ContentHeightKey: PreferenceKey
+{
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value += nextValue()
+    }
+}
+
+
+extension UIScreen
+{
+    static var currentBounds: CGRect
+    {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            return .zero
+        }
+        
+        return window.bounds
     }
 }
