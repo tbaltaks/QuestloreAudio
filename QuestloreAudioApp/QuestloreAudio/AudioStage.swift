@@ -29,38 +29,42 @@ struct AudioStage: View
     
     var body: some View
     {
-        VStack (spacing: 0)
-        {
-            // Toolbar Section
-            Toolbar()
-//            .border(.red)
-            
-            // Body Section
-            VStack
+        GeometryReader
+        { geometry in
+            VStack (spacing: 0)
             {
-                LazyVGrid (columns: columns, spacing: globalSpacing)
+                // Toolbar Section
+                Toolbar()
+    //            .border(.red)
+                
+                // Body Section
+                VStack
                 {
-                    ForEach(gridModel.cells)
-                    { cellModel in
-                        AudioCell(
-                            cellModel: cellModel,
-                            onToggle: { gridModel.ToggleCell(cellModel) },
-                            onSoloActioned: { gridModel.SoloCellActioned(cellModel) },
-                            onSoloCancelled: { gridModel.SoloCellCancelled(cellModel) },
-                            onSolo: { gridModel.SoloCell(cellModel) }
-                        )
+                    LazyVGrid (columns: columns, spacing: globalSpacing)
+                    {
+                        ForEach(gridModel.cells)
+                        { cellModel in
+                            AudioCell(
+                                cellModel: cellModel,
+                                onToggle: { gridModel.ToggleCell(cellModel) },
+                                onSoloActioned: { gridModel.SoloCellActioned(cellModel) },
+                                onSoloCancelled: { gridModel.SoloCellCancelled(cellModel) },
+                                onSolo: { gridModel.SoloCell(cellModel) }
+                            )
+                        }
                     }
+    //                .border(.orange)
                 }
-//                .border(.orange)
+                .padding(globalSpacing)
+                .drawingGroup()
+    //            .border(.blue)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .padding(globalSpacing)
-            .drawingGroup()
-//            .border(.blue)
+//            .border(.yellow)
+            .background(sceneBackground)
+            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+            .edgesIgnoringSafeArea(.all)
         }
-//        .border(.yellow)
-        .background(sceneBackground)
-        .edgesIgnoringSafeArea(.all)
+        
     }
     
     

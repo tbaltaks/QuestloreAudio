@@ -106,6 +106,8 @@ struct AudioCellGridData
         AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
         AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
         AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
+        AudioCellData(audio: "Dungeon_Ambience.mp3", label: "Dungeon Ambience", accentColor: .purple),
+        AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
         AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
         AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
         AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
@@ -114,8 +116,6 @@ struct AudioCellGridData
         AudioCellData(audio: "Building_Interior_Music.mp3", label: "Building Interior Music", accentColor: .blue),
         AudioCellData(audio: "Jungle_Ambience.mp3", label: "Jungle Ambience", accentColor: .green),
         AudioCellData(audio: "Mystic_Desert_Music.mp3", label: "Mystic Desert Music", accentColor: .yellow),
-        AudioCellData(audio: "Log_Fire_Ambience.m4a", label: "Log Fire Ambience", accentColor: .orange),
-        AudioCellData(audio: "Boss_Combat_Music.mp3", label: "Boss Combat Music", accentColor: .red),
     ]
     
     
