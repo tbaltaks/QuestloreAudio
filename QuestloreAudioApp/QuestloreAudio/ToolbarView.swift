@@ -7,12 +7,10 @@
 
 import SwiftUI
 
-struct Toolbar: View {
-    @Environment(\.colorScheme) var colorScheme
-    
-    var toolbarBackground: Color {
-        colorScheme == .dark ? Color(hex: "222222") : Color(hex: "cecece")
-    }
+struct Toolbar: View
+{
+    var height: CGFloat
+    var color: Color
     
     var body: some View
     {
@@ -23,13 +21,13 @@ struct Toolbar: View {
             Image("QLAudioLogo")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(height: 36)
+                .frame(height: height * 0.8)
                 .colorMultiply(.gray)
             
             Spacer(minLength: 0)
         }
-        .frame(height: 46)
-        .background(toolbarBackground)
+        .frame(height: height)
+        .background(color)
     }
     
     

@@ -16,9 +16,14 @@ struct AudioStage: View
     var sceneBackground: Color {
         colorScheme == .dark ? Color(hex: "171717") : Color(hex: "f1f1f1")
     }
+    var toolbarBackground: Color {
+        colorScheme == .dark ? Color(hex: "222222") : Color(hex: "cecece")
+    }
     
     @ObservedObject var gridModel: AudioCellGridModel
-    @State private var contentHeight: CGFloat = 0
+    
+    @State private var toolbarHeight: CGFloat = 46
+    @State private var gridHeight: CGFloat = 0
     
     init()
     {
@@ -35,28 +40,27 @@ struct AudioStage: View
             VStack (spacing: 0)
             {
                 // Toolbar Section
-                Toolbar()
-                .background(GeometryReader { geometry in
-                    Color.clear
-//                        .border(.green)
-                        .preference(key: ContentHeightKey.self, value: geometry.size.height)
-                })
+                Toolbar(height: toolbarHeight, color: toolbarBackground)
 //                .border(.red)
                 
                 // Body Section
                 ScrollView
                 {
-                    LazyVGrid (columns: columns, spacing: globalSpacing)
+                    Grid(alignment: .center, horizontalSpacing: globalSpacing, verticalSpacing: globalSpacing)
                     {
-                        ForEach(gridModel.cells)
-                        { cellModel in
-                            AudioCell(
-                                cellModel: cellModel,
-                                onToggle: { gridModel.ToggleCell(cellModel) },
-                                onSoloActioned: { gridModel.SoloCellActioned(cellModel) },
-                                onSoloCancelled: { gridModel.SoloCellCancelled(cellModel) },
-                                onSolo: { gridModel.SoloCell(cellModel) }
-                            )
+                        ForEach(Array(gridModel.cells.chunked(into: 10).enumerated()), id: \.offset) { index, row in
+                            GridRow {
+                                ForEach(row) { cellModel in
+                                    AudioCell(
+                                        cellModel: cellModel,
+                                        onToggle: { gridModel.ToggleCell(cellModel) },
+                                        onSoloActioned: { gridModel.SoloCellActioned(cellModel) },
+                                        onSoloCancelled: { gridModel.SoloCellCancelled(cellModel) },
+                                        onSolo: { gridModel.SoloCell(cellModel) }
+                                    )
+//                                    .border(.purple)
+                                }
+                            }
                         }
                     }
                     .padding(globalSpacing)
@@ -68,18 +72,21 @@ struct AudioStage: View
                     })
 //                    .border(.orange)
                 }
-                .scrollDisabled(contentHeight < UIScreen.currentBounds.height + 10)
+                .scrollDisabled(gridHeight + toolbarHeight < UIScreen.currentBounds.height + 10)
 //                .border(.blue)
             }
-            .frame(
-                width: UIScreen.currentBounds.width,
-                height: UIScreen.currentBounds.height,
-                alignment: .top)
+            .frame(width: UIScreen.currentBounds.width, height: UIScreen.currentBounds.height, alignment: .top)
             .background(sceneBackground)
             .edgesIgnoringSafeArea(.all)
             .onPreferenceChange(ContentHeightKey.self) { height in
-                contentHeight = height
-                print("Content height: \(height)")
+                gridHeight = height
+                toolbarHeight = max(UIScreen.currentBounds.height - height, 46)
+                print("Grid height: \(height)")
+                print("Toolbar height: \(toolbarHeight)")
+            }
+            .onChange(of: gridModel.cells) { _ in
+                // Force layout update when cells change
+                gridModel.objectWillChange.send()
             }
         }
     }
@@ -101,7 +108,6 @@ struct AudioStage: View
 }
 
 
-// PreferenceKey for height tracking
 struct ContentHeightKey: PreferenceKey
 {
     static var defaultValue: CGFloat = 0
@@ -123,3 +129,14 @@ extension UIScreen
         return window.bounds
     }
 }
+                                
+                                
+extension Array
+{
+    func chunked(into size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map {
+            Array(self[$0 ..< Swift.min($0 + size, count)])
+        }
+    }
+}
+                                

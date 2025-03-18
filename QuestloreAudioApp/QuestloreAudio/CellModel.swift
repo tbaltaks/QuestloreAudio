@@ -15,7 +15,7 @@ struct AudioCellData: Identifiable
     let accentColor: Color
 }
 
-class AudioCellModel: ObservableObject, Identifiable
+class AudioCellModel: ObservableObject, Identifiable, Equatable
 {
     let id: UUID
     let cellData: AudioCellData
@@ -34,6 +34,10 @@ class AudioCellModel: ObservableObject, Identifiable
     {
         self.cellData = cellData
         self.id = cellData.id
+    }
+    
+    static func == (lhs: AudioCellModel, rhs: AudioCellModel) -> Bool {
+        return lhs.id == rhs.id && lhs.isActive == rhs.isActive
     }
     
     func Toggle()
