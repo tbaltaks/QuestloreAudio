@@ -8,10 +8,13 @@
 import SwiftUI
 
 @main
-struct QuestloreAudioApp: App {
-    var body: some Scene {
+struct QuestloreAudioApp: App
+{
+    var body: some Scene
+    {
         WindowGroup {
             SceneView()
+                .persistentSystemOverlays(.hidden)
         }
     }
 }

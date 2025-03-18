@@ -137,6 +137,7 @@ struct SceneView: View
     
     var body: some View
     {
+        HomeIndicatorHiddenView(content:
         VStack (spacing: 0)
         {
             // Toolbar Section
@@ -157,7 +158,7 @@ struct SceneView: View
 //            .border(.red)
             
             // Body Section
-            ScrollView
+            VStack
             {
                 LazyVGrid (columns: columns, spacing: globalSpacing)
                 {
@@ -173,15 +174,16 @@ struct SceneView: View
                     }
                 }
                 .padding(globalSpacing)
-                .drawingGroup()
 //                .border(.orange)
             }
+            .drawingGroup()
 //            .border(.blue)
         }
         .edgesIgnoringSafeArea(.all)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(sceneBackground)
 //        .border(.yellow)
+        )
     }
     
     struct SceneView_Previews: PreviewProvider
@@ -198,28 +200,5 @@ struct SceneView: View
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.dark)
         }
-    }
-}
-
-
-
-// MARK: Scene wrapper in order to hide nav-bar
-
-class HomeIndicatorHostingController<Content: View>: UIHostingController<Content>
-{
-    override var prefersHomeIndicatorAutoHidden: Bool {
-        return true
-    }
-}
-
-struct SceneViewWrapper: UIViewControllerRepresentable
-{
-    func makeUIViewController(context: Context) -> UIViewController {
-        // Wrap your SceneView in the custom hosting controller.
-        HomeIndicatorHostingController(rootView: SceneView())
-    }
-    
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        // No update needed.
     }
 }
