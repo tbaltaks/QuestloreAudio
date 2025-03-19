@@ -22,7 +22,9 @@ struct AudioCell: View
     @State private var isSlowTapActioned: Bool = false
     @State private var isSlowTapCompleted: Bool = false
     @State private var isPointerDown: Bool = false
+    @State private var isValidGesture: Bool = true
     
+    @State private var cellSize: CGSize = .zero
     @State private var cornerRounding: CGFloat = 12
     
     // Detect the device theme
@@ -51,6 +53,9 @@ struct AudioCell: View
             backgroundColor
 //                .border(.green)
                 .preference(key: CellSizeKey.self, value: geometry.size.width * 0.1)
+                .onAppear {
+                    cellSize = geometry.size
+                }
         })
         .onPreferenceChange(CellSizeKey.self) { value in
             cornerRounding = value
@@ -71,28 +76,35 @@ struct AudioCell: View
             )
             .allowsHitTesting(false)
         )
-        .gesture(DragGesture(minimumDistance: 0)
-            .onChanged
-            { _ in
-                // On first detection, record the start time
-                if pressStartTime == nil
-                {
+        .contentShape(RoundedRectangle(cornerRadius: cornerRounding))
+        .gesture(
+            DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                let isInside = value.location.x >= 0 && value.location.x <= cellSize.width && value.location.y >= 0 && value.location.y <= cellSize.height
+                
+                guard isInside else {
+                    isValidGesture = false
+                    isPointerDown = false
+                    pressStartTime = nil
+                    if isSlowTapActioned && !isSlowTapCompleted {
+                        onSoloCancelled?()
+                    }
+                    isSlowTapActioned = false
+                    isSlowTapCompleted = false
+                    return
+                }
+                
+                if pressStartTime == nil && isValidGesture {
                     pressStartTime = Date()
                     isPointerDown = true
                     
-                    // After durationToAction, if still pressed, mark as slow tap actioned
-                    DispatchQueue.main.asyncAfter(deadline: .now() + cellModel.durationToAction)
-                    {
-                        if isPointerDown && !isSlowTapActioned
-                        {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + cellModel.durationToAction) {
+                        if isPointerDown && !isSlowTapActioned && isValidGesture {
                             isSlowTapActioned = true
                             onSoloActioned?()
                             
-                            // After additional durationToComplete, if still pressed, complete slow tap
-                            DispatchQueue.main.asyncAfter(deadline: .now() + cellModel.durationToComplete)
-                            {
-                                if isPointerDown && isSlowTapActioned && !isSlowTapCompleted
-                                {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + cellModel.durationToComplete) {
+                                if isPointerDown && isSlowTapActioned && !isSlowTapCompleted && isValidGesture {
                                     isSlowTapCompleted = true
                                     onSolo?()
                                 }
@@ -101,28 +113,26 @@ struct AudioCell: View
                     }
                 }
             }
-            .onEnded
-            { _ in
+            .onEnded { value in
+                let isInside = value.location.x >= 0 && value.location.x <= cellSize.width && value.location.y >= 0 && value.location.y <= cellSize.height
+                
                 isPointerDown = false
                 
-                // Decide action based on whether a slow tap was actioned
-                if !isSlowTapActioned
-                {
-                    // Quick tap detected: toggle cell
-                    onToggle?()
-                }
-                else if isSlowTapActioned && !isSlowTapCompleted
-                {
-                    // Slow tap was cancelled
-                    onSoloCancelled?()
+                if isValidGesture && isInside {
+                    if !isSlowTapActioned {
+                        onToggle?()
+                    } else if isSlowTapActioned && !isSlowTapCompleted {
+                        onSoloCancelled?()
+                    }
                 }
                 
-                // Reset gesture state
                 pressStartTime = nil
                 isSlowTapActioned = false
                 isSlowTapCompleted = false
+                isValidGesture = true
             }
         )
+        .scaleEffect(isPointerDown ? 0.96 : 1)
 //        .border(.yellow)
     }
     
