@@ -92,10 +92,6 @@ struct AudioStage: View
 //                    .border(.orange)
                 }
                 .scrollDisabled(gridHeight + toolbarHeight < windowHeight + 10)
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: 10)
-                        .onChanged { _ in /* no-op; this gesture exists only to allow scrolling */ }
-                )
 //                .border(.blue)
             }
             .frame(width: windowWidth, height: windowHeight, alignment: .top)
@@ -108,11 +104,6 @@ struct AudioStage: View
                 // Force layout update when cells change
                 gridModel.objectWillChange.send()
             }
-//            .onAppear {
-//                windowWidth = UIScreen.currentBounds.width
-//                windowHeight = UIScreen.currentBounds.height
-//                isWideScreen = windowWidth > 768
-//            }
         }
 //        .border(.pink)
         .edgesIgnoringSafeArea(isPhone ? .all.subtracting(.top) : .all)
@@ -140,20 +131,6 @@ struct ContentHeightKey: PreferenceKey
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value += nextValue()
-    }
-}
-
-
-extension UIScreen
-{
-    static var currentBounds: CGRect
-    {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else {
-            return .zero
-        }
-        
-        return window.bounds
     }
 }
                                 

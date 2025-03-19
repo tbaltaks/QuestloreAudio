@@ -23,8 +23,9 @@ struct AudioCell: View
     @State private var isSlowTapCompleted: Bool = false
     @State private var isPointerDown: Bool = false
     
-    @State private var cellSize: CGSize = .zero
-    @State private var cornerRounding: CGFloat = 12
+    @State private var cellWidth: CGFloat = 0
+    @State private var cornerRadius: CGFloat = 12
+    @State private var borderThickness: CGFloat = 2
     
     // Detect the device theme
     @Environment(\.colorScheme) var colorScheme
@@ -40,26 +41,13 @@ struct AudioCell: View
         GestureButton(
             longPressTime: cellModel.durationToAction,
             completeTime: cellModel.durationToComplete,
-            pressAction: {
-                isPointerDown = true
-            },
-            releaseAction: {
-                onToggle?()
-            },
-            longPressAction: {
-                onSoloActioned?()
-            },
-            cancelAction: {
-                onSoloCancelled?()
-            },
-            completeAction: {
-                onSolo?()
-            },
-            endAction: {
-                isPointerDown = false
-            }
-        )
-        {
+            pressAction: { isPointerDown = true },
+            releaseAction: { onToggle?() },
+            longPressAction: { onSoloActioned?() },
+            cancelAction: { onSoloCancelled?() },
+            completeAction: { onSolo?() },
+            endAction: { isPointerDown = false }
+        ){
             ZStack
             {
                 VStack (spacing: 0)
@@ -74,31 +62,40 @@ struct AudioCell: View
             .background(GeometryReader { geometry in
                 backgroundColor
     //                .border(.green)
-                    .preference(key: CellSizeKey.self, value: geometry.size.width * 0.1)
+                    .preference(key: CellSizeKey.self, value: geometry.size.width)
                     .onAppear {
-                        cellSize = geometry.size
+                        cellWidth = geometry.size.width
+                        cornerRadius = cellWidth * 0.1
+                        borderThickness = cellWidth * 0.018
                     }
             })
             .onPreferenceChange(CellSizeKey.self) { value in
-                cornerRounding = value
+                cellWidth = value
+                cornerRadius = cellWidth * 0.1
+                borderThickness = cellWidth * 0.018
             }
-    //        .background(backgroundColor)
-            .cornerRadius(cornerRounding)
-            .overlay(CellBorder(
+            .cornerRadius(cornerRadius)
+            .overlay(
+                CellBorder(
+                    lineWidth: borderThickness,
+                    cornerRadius: cornerRadius,
                     color: cellModel.cellData.accentColor,
                     progress: cellModel.borderProgress,
                     isInverted: cellModel.borderInverted
                 )
                 .allowsHitTesting(false)
             )
-            .overlay(OuterCellBorder(
+            .overlay(
+                OuterCellBorder(
+                    lineWidth: borderThickness * 1.8,
+                    cornerRadius: cornerRadius,
                     color: cellModel.cellData.accentColor,
                     progress: cellModel.outerBorderProgress,
                     isInverted: cellModel.outerBorderInverted
                 )
                 .allowsHitTesting(false)
             )
-            .contentShape(RoundedRectangle(cornerRadius: cornerRounding))
+            .contentShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
         .scaleEffect(isPointerDown ? 0.96 : 1)
 //        .border(.yellow)
@@ -169,7 +166,6 @@ struct VisualiserStem: View
     var targetHeight: CGFloat = 0
     
     @State private var height: CGFloat = 0
-    @State private var previousTargetHeight: CGFloat = 0
     
     var body: some View
     {
@@ -183,15 +179,11 @@ struct VisualiserStem: View
                 .frame(width: minHeight, height: height)
                 .onAppear {
                     height = targetHeight
-                    previousTargetHeight = targetHeight
                 }
                 .onChange(of: targetHeight) { newHeight in
-                    let animation = newHeight > previousTargetHeight
+                    let animation = newHeight > height
                         ? Animation.easeInOut(duration: 0.2)
                         : Animation.easeInOut(duration: 0.4)
-                    
-                    previousTargetHeight = newHeight
-                    
                     withAnimation(animation) {
                         height = newHeight
                     }
