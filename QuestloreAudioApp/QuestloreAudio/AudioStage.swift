@@ -92,6 +92,10 @@ struct AudioStage: View
 //                    .border(.orange)
                 }
                 .scrollDisabled(gridHeight + toolbarHeight < windowHeight + 10)
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 10)
+                        .onChanged { _ in /* no-op; this gesture exists only to allow scrolling */ }
+                )
 //                .border(.blue)
             }
             .frame(width: windowWidth, height: windowHeight, alignment: .top)

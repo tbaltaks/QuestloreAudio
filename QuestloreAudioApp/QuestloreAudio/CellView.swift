@@ -22,7 +22,7 @@ struct AudioCell: View
     @State private var isSlowTapActioned: Bool = false
     @State private var isSlowTapCompleted: Bool = false
     @State private var isPointerDown: Bool = false
-    @State private var isValidGesture: Bool = true
+//    @State private var isValidGesture: Bool = true
     
     @State private var cellSize: CGSize = .zero
     @State private var cornerRounding: CGFloat = 12
@@ -38,102 +38,153 @@ struct AudioCell: View
     
     var body: some View
     {
-        ZStack
-        {
-            VStack (spacing: 0)
-            {
-                AudioVisualiser(cellModel: cellModel)
-                ScaledText(cellModel: cellModel)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-//            .border(.pink)
-        }
-        .aspectRatio(1.66, contentMode: .fit)
-        .background(GeometryReader { geometry in
-            backgroundColor
-//                .border(.green)
-                .preference(key: CellSizeKey.self, value: geometry.size.width * 0.1)
-                .onAppear {
-                    cellSize = geometry.size
-                }
-        })
-        .onPreferenceChange(CellSizeKey.self) { value in
-            cornerRounding = value
-        }
-//        .background(backgroundColor)
-        .cornerRadius(cornerRounding)
-        .overlay(CellBorder(
-                color: cellModel.cellData.accentColor,
-                progress: cellModel.borderProgress,
-                isInverted: cellModel.borderInverted
-            )
-            .allowsHitTesting(false)
-        )
-        .overlay(OuterCellBorder(
-                color: cellModel.cellData.accentColor,
-                progress: cellModel.outerBorderProgress,
-                isInverted: cellModel.outerBorderInverted
-            )
-            .allowsHitTesting(false)
-        )
-        .contentShape(RoundedRectangle(cornerRadius: cornerRounding))
-        .gesture(
-            DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                let isInside = value.location.x >= 0 && value.location.x <= cellSize.width && value.location.y >= 0 && value.location.y <= cellSize.height
-                
-                guard isInside else {
-                    isValidGesture = false
-                    isPointerDown = false
-                    pressStartTime = nil
-                    if isSlowTapActioned && !isSlowTapCompleted {
-                        onSoloCancelled?()
-                    }
-                    isSlowTapActioned = false
-                    isSlowTapCompleted = false
-                    return
-                }
-                
-                if pressStartTime == nil && isValidGesture {
-                    pressStartTime = Date()
-                    isPointerDown = true
-                    
-                    DispatchQueue.main.asyncAfter(deadline: .now() + cellModel.durationToAction) {
-                        if isPointerDown && !isSlowTapActioned && isValidGesture {
-                            isSlowTapActioned = true
-                            onSoloActioned?()
-                            
-                            DispatchQueue.main.asyncAfter(deadline: .now() + cellModel.durationToComplete) {
-                                if isPointerDown && isSlowTapActioned && !isSlowTapCompleted && isValidGesture {
-                                    isSlowTapCompleted = true
-                                    onSolo?()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            .onEnded { value in
-                let isInside = value.location.x >= 0 && value.location.x <= cellSize.width && value.location.y >= 0 && value.location.y <= cellSize.height
-                
+        GestureButton(
+            longPressTime: cellModel.durationToAction,
+            completeTime: cellModel.durationToComplete,
+            pressAction: {
+                isPointerDown = true
+            },
+            releaseAction: {
+                onToggle?()
+            },
+            longPressAction: {
+                onSoloActioned?()
+            },
+            cancelAction: {
+                onSoloCancelled?()
+            },
+            completeAction: {
+                onSolo?()
+            },
+            endAction: {
                 isPointerDown = false
-                
-                if isValidGesture && isInside {
-                    if !isSlowTapActioned {
-                        onToggle?()
-                    } else if isSlowTapActioned && !isSlowTapCompleted {
-                        onSoloCancelled?()
-                    }
-                }
-                
-                pressStartTime = nil
-                isSlowTapActioned = false
-                isSlowTapCompleted = false
-                isValidGesture = true
             }
         )
+        {
+            ZStack
+            {
+                VStack (spacing: 0)
+                {
+                    AudioVisualiser(cellModel: cellModel)
+                    ScaledText(cellModel: cellModel)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+    //            .border(.pink)
+            }
+            .aspectRatio(1.66, contentMode: .fit)
+            .background(GeometryReader { geometry in
+                backgroundColor
+    //                .border(.green)
+                    .preference(key: CellSizeKey.self, value: geometry.size.width * 0.1)
+                    .onAppear {
+                        cellSize = geometry.size
+                    }
+            })
+            .onPreferenceChange(CellSizeKey.self) { value in
+                cornerRounding = value
+            }
+    //        .background(backgroundColor)
+            .cornerRadius(cornerRounding)
+            .overlay(CellBorder(
+                    color: cellModel.cellData.accentColor,
+                    progress: cellModel.borderProgress,
+                    isInverted: cellModel.borderInverted
+                )
+                .allowsHitTesting(false)
+            )
+            .overlay(OuterCellBorder(
+                    color: cellModel.cellData.accentColor,
+                    progress: cellModel.outerBorderProgress,
+                    isInverted: cellModel.outerBorderInverted
+                )
+                .allowsHitTesting(false)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: cornerRounding))
+        }
         .scaleEffect(isPointerDown ? 0.96 : 1)
 //        .border(.yellow)
+        
+        
+        
+//        .onTapGesture { print("Tap") }
+//        .gesture(
+//            DragGesture(minimumDistance: 0)
+//                .onChanged { value in
+//                    // Set a threshold for distinguishing a scroll gesture
+//                    let threshold: CGFloat = 40.0
+//                    let translation = value.translation
+//
+//                    // If the drag exceeds the threshold, treat it as a scroll
+//                    if abs(translation.width) > threshold || abs(translation.height) > threshold {
+//                        // Cancel cell-specific logic and let the scroll view handle the gesture.
+//                        isValidGesture = false
+//                        isPointerDown = false
+//                        pressStartTime = nil
+//                        if isSlowTapActioned && !isSlowTapCompleted {
+//                            onSoloCancelled?()
+//                        }
+//                        isSlowTapActioned = false
+//                        isSlowTapCompleted = false
+//                        return
+//                    }
+//
+//                    // Otherwise, process the cell gesture as before.
+//                    let isInside = value.location.x >= 0 && value.location.x <= cellSize.width &&
+//                                   value.location.y >= 0 && value.location.y <= cellSize.height
+//                    guard isInside else {
+//                        isValidGesture = false
+//                        isPointerDown = false
+//                        pressStartTime = nil
+//                        if isSlowTapActioned && !isSlowTapCompleted {
+//                            onSoloCancelled?()
+//                        }
+//                        isSlowTapActioned = false
+//                        isSlowTapCompleted = false
+//                        return
+//                    }
+//
+//                    if pressStartTime == nil && isValidGesture {
+//                        pressStartTime = Date()
+//                        isPointerDown = true
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + cellModel.durationToAction) {
+//                            if isPointerDown && !isSlowTapActioned && isValidGesture {
+//                                isSlowTapActioned = true
+//                                onSoloActioned?()
+//                                DispatchQueue.main.asyncAfter(deadline: .now() + cellModel.durationToComplete) {
+//                                    if isPointerDown && isSlowTapActioned && !isSlowTapCompleted && isValidGesture {
+//                                        isSlowTapCompleted = true
+//                                        onSolo?()
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//                .onEnded { value in
+//                    // Check again for threshold
+//                    let threshold: CGFloat = 40.0
+//                    let translation = value.translation
+//                    let isScrollGesture = abs(translation.width) > threshold || abs(translation.height) > threshold
+//
+//                    isPointerDown = false
+//                    let isInside = value.location.x >= 0 && value.location.x <= cellSize.width &&
+//                                   value.location.y >= 0 && value.location.y <= cellSize.height
+//
+//                    // If it was a scroll gesture, do not trigger tap actions.
+//                    if isValidGesture && isInside && !isScrollGesture {
+//                        if !isSlowTapActioned {
+//                            onToggle?()
+//                        } else if isSlowTapActioned && !isSlowTapCompleted {
+//                            onSoloCancelled?()
+//                        }
+//                    }
+//
+//                    pressStartTime = nil
+//                    isSlowTapActioned = false
+//                    isSlowTapCompleted = false
+//                    isValidGesture = true
+//                }
+//        )
     }
     
     
