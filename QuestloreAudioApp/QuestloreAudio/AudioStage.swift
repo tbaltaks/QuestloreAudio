@@ -25,22 +25,39 @@ struct AudioStage: View
     @State private var toolbarHeight: CGFloat = 46
     @State private var gridHeight: CGFloat = 0
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+        
+    private var isPhone: Bool {
+        // iPhone will have at least one compact dimension in portrait
+        !(horizontalSizeClass == .regular && verticalSizeClass == .regular)
+    }
+    
+//    @State private var windowWidth: CGFloat = 0
+//    @State private var windowHeight: CGFloat = 0
+//    @State private var isWideScreen: Bool = true
+    
     init()
     {
         gridModel = AudioCellGridModel(cellDataArray: AudioCellGridData.allCellData)
     }
-    
-    // MARK: Grid Layout
-    let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 10)
+
+//    // MARK: Grid Layout
+//    let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 10)
     
     var body: some View
     {
         GeometryReader
         { geometry in
+            
+            let windowWidth = geometry.size.width
+            let windowHeight = geometry.size.height
+            let isLandscape = windowWidth > windowHeight
+            
             VStack (spacing: 0)
             {
                 // Toolbar Section
-                Toolbar(height: toolbarHeight, color: toolbarBackground)
+                Toolbar(height: toolbarHeight, bottomOffset: isPhone ? 8 : 0, color: toolbarBackground)
 //                .border(.red)
                 
                 // Body Section
@@ -48,7 +65,9 @@ struct AudioStage: View
                 {
                     Grid(alignment: .center, horizontalSpacing: globalSpacing, verticalSpacing: globalSpacing)
                     {
-                        ForEach(Array(gridModel.cells.chunked(into: 10).enumerated()), id: \.offset) { index, row in
+                        let columnCount = isPhone ? 4 : isLandscape ? 10 : 5
+                        
+                        ForEach(Array(gridModel.cells.chunked(into: columnCount).enumerated()), id: \.offset) { index, row in
                             GridRow {
                                 ForEach(row) { cellModel in
                                     AudioCell(
@@ -72,23 +91,27 @@ struct AudioStage: View
                     })
 //                    .border(.orange)
                 }
-                .scrollDisabled(gridHeight + toolbarHeight < UIScreen.currentBounds.height + 10)
+                .scrollDisabled(gridHeight + toolbarHeight < windowHeight + 10)
 //                .border(.blue)
             }
-            .frame(width: UIScreen.currentBounds.width, height: UIScreen.currentBounds.height, alignment: .top)
+            .frame(width: windowWidth, height: windowHeight, alignment: .top)
             .background(sceneBackground)
-            .edgesIgnoringSafeArea(.all)
             .onPreferenceChange(ContentHeightKey.self) { height in
                 gridHeight = height
-                toolbarHeight = max(UIScreen.currentBounds.height - height, 46)
-                print("Grid height: \(height)")
-                print("Toolbar height: \(toolbarHeight)")
+                toolbarHeight = max(windowHeight - height, 46)
             }
             .onChange(of: gridModel.cells) { _ in
                 // Force layout update when cells change
                 gridModel.objectWillChange.send()
             }
+//            .onAppear {
+//                windowWidth = UIScreen.currentBounds.width
+//                windowHeight = UIScreen.currentBounds.height
+//                isWideScreen = windowWidth > 768
+//            }
         }
+//        .border(.pink)
+        .edgesIgnoringSafeArea(isPhone ? .all.subtracting(.top) : .all)
     }
     
     

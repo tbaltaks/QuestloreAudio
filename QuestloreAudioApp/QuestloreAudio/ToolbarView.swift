@@ -10,6 +10,7 @@ import SwiftUI
 struct Toolbar: View
 {
     var height: CGFloat
+    var bottomOffset: CGFloat
     var color: Color
     
     var body: some View
@@ -21,6 +22,7 @@ struct Toolbar: View
             Image("QLAudioLogo")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
+                .padding(.bottom, bottomOffset)
                 .frame(height: height * 0.8)
                 .colorMultiply(.gray)
             

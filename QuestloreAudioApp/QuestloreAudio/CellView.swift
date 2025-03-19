@@ -23,6 +23,8 @@ struct AudioCell: View
     @State private var isSlowTapCompleted: Bool = false
     @State private var isPointerDown: Bool = false
     
+    @State private var cornerRounding: CGFloat = 12
+    
     // Detect the device theme
     @Environment(\.colorScheme) var colorScheme
     
@@ -42,10 +44,19 @@ struct AudioCell: View
                 ScaledText(cellModel: cellModel)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+//            .border(.pink)
         }
         .aspectRatio(1.66, contentMode: .fit)
-        .background(backgroundColor)
-        .cornerRadius(12)
+        .background(GeometryReader { geometry in
+            backgroundColor
+//                .border(.green)
+                .preference(key: CellSizeKey.self, value: geometry.size.width * 0.1)
+        })
+        .onPreferenceChange(CellSizeKey.self) { value in
+            cornerRounding = value
+        }
+//        .background(backgroundColor)
+        .cornerRadius(cornerRounding)
         .overlay(CellBorder(
                 color: cellModel.cellData.accentColor,
                 progress: cellModel.borderProgress,
@@ -60,7 +71,6 @@ struct AudioCell: View
             )
             .allowsHitTesting(false)
         )
-        .contentShape(Rectangle()) // makes full area tappable
         .gesture(DragGesture(minimumDistance: 0)
             .onChanged
             { _ in
@@ -113,6 +123,7 @@ struct AudioCell: View
                 isSlowTapCompleted = false
             }
         )
+//        .border(.yellow)
     }
     
     
@@ -345,6 +356,15 @@ struct OuterCellBorder: View, Animatable
         .mask(RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(lineWidth: lineWidth)
         )
+    }
+}
+
+
+struct CellSizeKey: PreferenceKey
+{
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value += nextValue()
     }
 }
     
