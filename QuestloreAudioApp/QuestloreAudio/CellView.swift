@@ -137,11 +137,11 @@ struct AudioVisualiser: View
                 Spacer(minLength: 0)
             }
             .frame(minHeight: geometry.size.height * 1.1)
-            .onReceive(AudioManager.shared.$bandedSampleData) { newData in
-                if let updatedBands = newData[cellModel.cellData.id] {
-                    audioData = updatedBands
-                }
-            }
+//            .onReceive(AudioManager.shared.$bandedSampleData) { newData in
+//                if let updatedBands = newData[cellModel.cellData.id] {
+//                    audioData = updatedBands
+//                }
+//            }
         }
     }
 }

@@ -21,8 +21,8 @@ class AudioCellModel: ObservableObject, Identifiable, Equatable
     let cellData: AudioCellData
     @Published var isActive: Bool = false
     
-    @Published var durationToAction: TimeInterval = 0.0 //0.25
-    @Published var durationToComplete: TimeInterval = 1.2
+    @Published var durationToAction: TimeInterval = 0.2
+    @Published var durationToComplete: TimeInterval = 1.4
     
     @Published var borderProgress: CGFloat = 0.0
     @Published var borderInverted: Bool = false
@@ -93,7 +93,7 @@ class AudioCellModel: ObservableObject, Identifiable, Equatable
         }
     }
     
-    func AnimateOuterBorder(startFill: CGFloat = 69.0, targetFill: CGFloat, duration: Double, isInverted: Bool = false)
+    func AnimateOuterBorder(startFill: CGFloat = 69.0, targetFill: CGFloat, duration: Double = 0.28, isInverted: Bool = false)
     {
         withTransaction(Transaction(animation: nil))
         {
@@ -148,7 +148,7 @@ class AudioCellGridModel: ObservableObject
     func SoloCellCancelled(_ cell: AudioCellModel)
     {
         if (cell.isActive) {
-            cell.AnimateOuterBorder(targetFill: 0.0, duration: 0.28)
+            cell.AnimateOuterBorder(targetFill: 0.0)
         } else {
             cell.AnimateBorder(startFill: cell.borderProgress, targetFill: 0.0)
         }
