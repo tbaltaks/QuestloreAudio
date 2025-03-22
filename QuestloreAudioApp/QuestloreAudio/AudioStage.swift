@@ -33,10 +33,6 @@ struct AudioStage: View
         !(horizontalSizeClass == .regular && verticalSizeClass == .regular)
     }
     
-//    @State private var windowWidth: CGFloat = 0
-//    @State private var windowHeight: CGFloat = 0
-//    @State private var isWideScreen: Bool = true
-    
     init()
     {
         gridModel = AudioCellGridModel(cellDataArray: AudioCellGridData.allCellData)

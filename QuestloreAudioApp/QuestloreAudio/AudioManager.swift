@@ -46,7 +46,7 @@ class AudioManager: ObservableObject
     private init()
     {
         // Start a global Combine timer to update FFT processing.
-        fftProcessingCancellable = Timer.publish(every: 0.02, on: .main, in: .common)
+        fftProcessingCancellable = Timer.publish(every: 0.025, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self = self else { return }

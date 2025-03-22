@@ -17,13 +17,8 @@ struct AudioCell: View
     var onSoloCancelled: (() -> Void)? = nil
     var onSolo: (() -> Void)? = nil
     
-    //Gesture Timing States
-    @State private var pressStartTime: Date? = nil
-    @State private var isSlowTapActioned: Bool = false
-    @State private var isSlowTapCompleted: Bool = false
-    @State private var isPointerDown: Bool = false
-    
     @State private var cellWidth: CGFloat = 0
+    @State private var cellHeight: CGFloat = 0
     @State private var cornerRadius: CGFloat = 12
     @State private var borderThickness: CGFloat = 2
     
@@ -41,12 +36,10 @@ struct AudioCell: View
         GestureButton(
             longPressTime: cellModel.durationToAction,
             completeTime: cellModel.durationToComplete,
-            pressAction: { isPointerDown = true },
             releaseAction: { onToggle?() },
             longPressAction: { onSoloActioned?() },
             cancelAction: { onSoloCancelled?() },
-            completeAction: { onSolo?() },
-            endAction: { isPointerDown = false }
+            completeAction: { onSolo?() }
         ){
             ZStack
             {
@@ -63,14 +56,8 @@ struct AudioCell: View
                 backgroundColor
     //                .border(.green)
                     .preference(key: CellSizeKey.self, value: geometry.size.width)
-                    .onAppear {
-                        cellWidth = geometry.size.width
-                        cornerRadius = cellWidth * 0.1
-                        borderThickness = cellWidth * 0.018
-                    }
             })
-            .onPreferenceChange(CellSizeKey.self) { value in
-                cellWidth = value
+            .onPreferenceChange(CellSizeKey.self) { cellWidth in
                 cornerRadius = cellWidth * 0.1
                 borderThickness = cellWidth * 0.018
             }
@@ -95,10 +82,7 @@ struct AudioCell: View
                 )
                 .allowsHitTesting(false)
             )
-            .contentShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
-        .scaleEffect(isPointerDown ? 0.96 : 1)
-//        .border(.yellow)
     }
     
     
@@ -163,7 +147,7 @@ struct AudioVisualiser: View
 }
 
 
-struct VisualiserStem: View
+struct VisualiserStem: View, Equatable
 {
     private static let RISE_ANIMATION_DURATION: Double = 0.2
     private static let FALL_ANIMATION_DURATION: Double = 0.4
@@ -189,14 +173,22 @@ struct VisualiserStem: View
                 }
                 .onChange(of: targetHeight) { newHeight in
                     withAnimation(
-                        .easeInOut(duration: newHeight > height 
-                            ? Self.RISE_ANIMATION_DURATION 
+                        .easeInOut(duration: newHeight > height
+                            ? Self.RISE_ANIMATION_DURATION
                             : Self.FALL_ANIMATION_DURATION)
                     ) {
                         height = newHeight
                     }
                 }
         }
+    }
+    
+    // Tell SwiftUI when two VisualiserStems are considered equal
+    static func == (lhs: VisualiserStem, rhs: VisualiserStem) -> Bool {
+        // Only redraw if these properties changed
+        lhs.targetHeight == rhs.targetHeight &&
+        lhs.color == rhs.color &&
+        lhs.minHeight == rhs.minHeight
     }
 }
 

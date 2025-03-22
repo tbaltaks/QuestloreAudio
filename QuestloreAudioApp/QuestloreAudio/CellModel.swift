@@ -21,8 +21,8 @@ class AudioCellModel: ObservableObject, Identifiable, Equatable
     let cellData: AudioCellData
     @Published var isActive: Bool = false
     
-    @Published var durationToAction: TimeInterval = 0.25
-    @Published var durationToComplete: TimeInterval = 1.0
+    @Published var durationToAction: TimeInterval = 0.0 //0.25
+    @Published var durationToComplete: TimeInterval = 1.2
     
     @Published var borderProgress: CGFloat = 0.0
     @Published var borderInverted: Bool = false
