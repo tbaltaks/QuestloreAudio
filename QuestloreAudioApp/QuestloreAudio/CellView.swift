@@ -120,22 +120,26 @@ struct AudioCell: View
 
 struct AudioVisualiser: View
 {
-    var cellModel: AudioCellModel
+    private static let VISUALIZER_BANDS = 16
+    private static let STEM_SPACING_RATIO: CGFloat = 0.034
+    private static let MIN_STEM_HEIGHT_RATIO: CGFloat = 0.068
+    private static let MAX_STEM_HEIGHT_RATIO: CGFloat = 0.82
     
-    @State var audioData = [Float](repeating: 0, count: 16)
+    var cellModel: AudioCellModel
+    @State var audioData = [Float](repeating: 0, count: VISUALIZER_BANDS)
     
     var body: some View
     {
         GeometryReader
         { geometry in
-            let minStemHeight = geometry.size.height * 0.068
-            let maxStemHeight = geometry.size.height * 0.82
+            let minStemHeight = geometry.size.height * Self.MIN_STEM_HEIGHT_RATIO
+            let maxStemHeight = geometry.size.height * Self.MAX_STEM_HEIGHT_RATIO
             
-            HStack (spacing: geometry.size.width * 0.034)
+            HStack (spacing: geometry.size.width * Self.STEM_SPACING_RATIO)
             {
                 Spacer(minLength: 0)
                 
-                ForEach (0..<16, id: \.self)
+                ForEach (0..<Self.VISUALIZER_BANDS, id: \.self)
                 { index in
                     let computedStemHeight = min(minStemHeight + (maxStemHeight - minStemHeight) * CGFloat(audioData[index]), maxStemHeight)
                     
@@ -161,6 +165,9 @@ struct AudioVisualiser: View
 
 struct VisualiserStem: View
 {
+    private static let RISE_ANIMATION_DURATION: Double = 0.2
+    private static let FALL_ANIMATION_DURATION: Double = 0.4
+    
     var color: Color = .blue
     var minHeight: CGFloat
     var targetHeight: CGFloat = 0
@@ -181,10 +188,11 @@ struct VisualiserStem: View
                     height = targetHeight
                 }
                 .onChange(of: targetHeight) { newHeight in
-                    let animation = newHeight > height
-                        ? Animation.easeInOut(duration: 0.2)
-                        : Animation.easeInOut(duration: 0.4)
-                    withAnimation(animation) {
+                    withAnimation(
+                        .easeInOut(duration: newHeight > height 
+                            ? Self.RISE_ANIMATION_DURATION 
+                            : Self.FALL_ANIMATION_DURATION)
+                    ) {
                         height = newHeight
                     }
                 }
@@ -342,8 +350,16 @@ struct CellSizeKey: PreferenceKey
 // Extension to create a Color from a hex string.
 extension Color
 {
+    private static var colorCache: [String: Color] = [:]
+    
     init(hex: String)
     {
+        // Check cache first
+        if let cached = Color.colorCache[hex] {
+            self = cached
+            return
+        }
+        
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)
@@ -361,12 +377,16 @@ extension Color
             (a, r, g, b) = (255, 0, 0, 0)
         }
         
-        self.init(
+        let color = Color(
             .sRGB,
             red: Double(r) / 255,
             green: Double(g) / 255,
             blue: Double(b) / 255,
             opacity: Double(a) / 255
         )
+        
+        // Cache the result
+        Color.colorCache[hex] = color
+        self = color
     }
 }
