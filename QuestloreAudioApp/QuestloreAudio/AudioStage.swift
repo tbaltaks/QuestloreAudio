@@ -61,7 +61,7 @@ struct AudioStage: View
                 {
                     Grid(alignment: .center, horizontalSpacing: globalSpacing, verticalSpacing: globalSpacing)
                     {
-                        let columnCount = isPhone ? 4 : isLandscape ? 10 : 5
+                        let columnCount = Int(windowWidth / 120)
                         
                         ForEach(Array(gridModel.cells.chunked(into: columnCount).enumerated()), id: \.offset) { index, row in
                             GridRow {
@@ -102,7 +102,8 @@ struct AudioStage: View
             }
         }
 //        .border(.pink)
-        .edgesIgnoringSafeArea(isPhone ? .all.subtracting(.top) : .all)
+//        .edgesIgnoringSafeArea(isPhone ? .all.subtracting(.top) : .all)
+        
     }
     
     
