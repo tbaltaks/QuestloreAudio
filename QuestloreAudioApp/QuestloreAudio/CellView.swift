@@ -108,16 +108,10 @@ struct AudioVisualiser: View
     private static let STEM_SPACING_RATIO: CGFloat = 0.034
     private static let MIN_STEM_HEIGHT_RATIO: CGFloat = 0.068
     private static let MAX_STEM_HEIGHT_RATIO: CGFloat = 0.82
-    private static let RISE_ANIMATION_DURATION: Double = 0.2
-    private static let FALL_ANIMATION_DURATION: Double = 1.0
+    private static let ANIMATION_DURATION: Double = 0.4
     
     var cellModel: AudioCellModel
-    
-    @State private var targetStemHeights = [Int: CGFloat]()
-    @State private var previousTargetHeights = [Int: CGFloat]()
-    @State private var lastUpdateTime = [Int: Date]()
-    @State private var lastAnimationDuration = [Int: Double]()
-    @State private var animationStartHeights = [Int: CGFloat]()
+    @State private var audioData = [Float](repeating: 0, count: VISUALIZER_BANDS)
     
     var body: some View
     {
@@ -132,11 +126,13 @@ struct AudioVisualiser: View
                 
                 ForEach (0..<Self.VISUALIZER_BANDS, id: \.self)
                 { index in
+                    let newStemHeight = min(minStemHeight + (maxStemHeight - minStemHeight) * CGFloat(audioData[index]), maxStemHeight)
+                    
                     VisualiserStem(
                         id: index,
                         color: cellModel.cellData.accentColor,
                         minHeight: minStemHeight,
-                        height: targetStemHeights[index] ?? minStemHeight
+                        height: newStemHeight
                     )
                 }
                 
@@ -144,76 +140,12 @@ struct AudioVisualiser: View
             }
             .frame(minHeight: geometry.size.height * 1.1)
             .onReceive(AudioManager.shared.$bandedSampleData) { newData in
-                if let audioData = newData[cellModel.cellData.id] {
-                    for index in 0..<min(audioData.count, Self.VISUALIZER_BANDS)
-                    {
-                        let now = Date()
-                        
-                        let newStemHeight = min(minStemHeight + (maxStemHeight - minStemHeight) * CGFloat(audioData[index]), maxStemHeight)
-                        
-                        let previousTarget = targetStemHeights[index] ?? minStemHeight
-                        previousTargetHeights[index] = previousTarget
-            
-                        let estimatedCurrentHeight = calculateEaseInOutCurrentHeight(index: index, currentTime: now, newTarget: newStemHeight, minHeight: minStemHeight)
-                        animationStartHeights[index] = estimatedCurrentHeight
-                        
-                        print("Previous target for stem \(index):   \(previousTarget)")
-                        print("Estimated current for stem \(index): \(estimatedCurrentHeight)")
-                        print("NEW height for stem \(index):        \(newStemHeight)")
-                        print("---------------------------------------------------------")
-                        
-                        let animationDuration = newStemHeight > estimatedCurrentHeight
-                        ? Self.RISE_ANIMATION_DURATION : Self.FALL_ANIMATION_DURATION
-                        lastAnimationDuration[index] = animationDuration
-                        
-                        withAnimation(.easeInOut(duration: animationDuration)) {
-                            targetStemHeights[index] = newStemHeight
-                        }
-                        
-                        lastUpdateTime[index] = now
+                if let updatedBands = newData[cellModel.cellData.id] {
+                    withAnimation(.easeInOut(duration: AudioVisualiser.ANIMATION_DURATION)) {
+                        audioData = updatedBands
                     }
                 }
             }
-        }
-    }
-    
-    private func calculateEaseInOutCurrentHeight(index: Int, currentTime: Date, newTarget: CGFloat, minHeight: CGFloat) -> CGFloat
-    {
-        // Get the time of last update
-        guard let lastUpdate = lastUpdateTime[index],
-              let animDuration = lastAnimationDuration[index] else {
-            return targetStemHeights[index] ?? minHeight
-        }
-        
-        // Get the last estimated value (what we were animating from),
-        // - and previous-previous target for backup
-        let prevPrevTarget = previousTargetHeights[index] ?? minHeight
-        let startHeight = animationStartHeights[index] ?? prevPrevTarget
-        let currentTarget = targetStemHeights[index] ?? minHeight
-        
-        // Calculate time elapsed since last update
-        let elapsed = currentTime.timeIntervalSince(lastUpdate)
-        
-        // Calculate progress of the animation (capped at 1.0)
-        let rawProgress = min(elapsed / animDuration, 1.0)
-        
-        // Apply easeInOut curve to the progress
-        let curvedProgress = easeInOutCurve(t: rawProgress)
-        
-        // Interpolate between start and end using the curved progress
-        return startHeight + (currentTarget - startHeight) * rawProgress
-    }
-        
-    // Standard easeInOut cubic curve calculation
-    private func easeInOutCurve(t: Double) -> CGFloat
-    {
-        let t = CGFloat(t)
-        
-        // t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2
-        if t < 0.5 {
-            return 4 * t * t * t
-        } else {
-            return 1 - pow(-2 * t + 2, 3) / 2
         }
     }
 }
