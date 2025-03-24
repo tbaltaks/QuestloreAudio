@@ -10,9 +10,9 @@ import SwiftUI
 struct AudioCellData: Identifiable
 {
     let id = UUID()
-    let audio: String
-    let label: String
-    let accentColor: Color
+    var audio: String = ""
+    var label: String = ""
+    var accentColor: Color = .gray
 }
 
 class AudioCellModel: ObservableObject, Identifiable, Equatable
@@ -178,10 +178,12 @@ class AudioCellGridModel: ObservableObject
             AudioStage()
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.light)
+                .environmentObject(GlobalColors(colorScheme: .light))
             
             AudioStage()
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.dark)
+                .environmentObject(GlobalColors(colorScheme: .dark))
         }
     }
 }

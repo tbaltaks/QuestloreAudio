@@ -9,15 +9,7 @@ import SwiftUI
 
 struct AudioStage: View
 {
-    @Environment(\.colorScheme) var colorScheme
-    
-    var sceneBackground: Color {
-        colorScheme == .dark ? Color(hex: "171717") : Color(hex: "f1f1f1")
-    }
-    var toolbarBackground: Color {
-        colorScheme == .dark ? Color(hex: "222222") : Color(hex: "cecece")
-    }
-    
+    @EnvironmentObject var globalColors: GlobalColors
     @ObservedObject var gridModel: AudioCellGridModel
     
     @State private var toolbarHeight: CGFloat = 46
@@ -59,8 +51,7 @@ struct AudioStage: View
                 // Toolbar Section
                 Toolbar(
                     height: toolbarHeight + (isLandscape ? 0 : windowHeight * 0.01),
-                    bottomOffset: isLandscape ? 0 : (isPhone ? 8 : 0),
-                    color: toolbarBackground
+                    bottomOffset: isLandscape ? 0 : (isPhone ? 8 : 0)
                 )
 //                .border(.red)
                 
@@ -97,7 +88,7 @@ struct AudioStage: View
 //                .border(.blue)
             }
             .edgesIgnoringSafeArea(computeSafeEdges(isPhone, isLandscape))
-            .background(sceneBackground)
+            .background(globalColors.sceneBackground)
             .onPreferenceChange(ContentHeightKey.self) { height in
                 gridHeight = height
                 toolbarHeight = max(windowHeight - height, 46)
@@ -131,10 +122,12 @@ struct AudioStage: View
             AudioStage()
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.light)
+                .environmentObject(GlobalColors(colorScheme: .light))
             
             AudioStage()
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.dark)
+                .environmentObject(GlobalColors(colorScheme: .dark))
         }
     }
 }

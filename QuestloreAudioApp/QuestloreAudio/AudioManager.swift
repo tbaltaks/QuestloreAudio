@@ -31,6 +31,7 @@ class AudioManager: ObservableObject
 {
     static let shared = AudioManager()
     private var fftProcessingCancellable: AnyCancellable?
+    
     let numberOfStems: Int = 16
 
     // Fade durations (in seconds)

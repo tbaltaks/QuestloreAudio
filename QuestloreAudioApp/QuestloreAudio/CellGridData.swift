@@ -126,10 +126,12 @@ struct AudioCellGridData
             AudioStage()
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.light)
+                .environmentObject(GlobalColors(colorScheme: .light))
             
             AudioStage()
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.dark)
+                .environmentObject(GlobalColors(colorScheme: .dark))
         }
     }
 }

@@ -10,14 +10,21 @@ import SwiftUI
 @main
 struct QuestloreAudioApp: App
 {
-    @StateObject private var globalData = GlobalData()
+    @Environment(\.colorScheme) var systemColorScheme
+    @StateObject private var globalColors = GlobalColors(colorScheme: .light)
     
     var body: some Scene
     {
         WindowGroup {
             AudioStage()
                 .persistentSystemOverlays(.hidden)
-                .environmentObject(globalData)
+                .environmentObject(globalColors)
+                .onAppear {
+                    globalColors.colorScheme = systemColorScheme
+                }
+                .onChange(of: systemColorScheme) { newScheme in
+                    globalColors.colorScheme = newScheme
+                }
         }
     }
     
@@ -29,16 +36,12 @@ struct QuestloreAudioApp: App
             AudioStage()
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.light)
+                .environmentObject(GlobalColors(colorScheme: .light))
             
             AudioStage()
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.dark)
+                .environmentObject(GlobalColors(colorScheme: .dark))
         }
     }
-}
-
-
-class GlobalData: ObservableObject
-{
-    @Published var cornerRadius: CGFloat = 12.0
 }

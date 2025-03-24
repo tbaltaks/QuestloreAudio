@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AudioCell: View
 {
+    @EnvironmentObject var globalColors: GlobalColors
     @ObservedObject var cellModel: AudioCellModel
     
     // Callbacks provided by the parent (AudioGridModel)
@@ -21,15 +22,6 @@ struct AudioCell: View
     @State private var cellHeight: CGFloat = 0
     @State private var cornerRadius: CGFloat = 12
     @State private var borderThickness: CGFloat = 2
-    
-    // Detect the device theme
-    @Environment(\.colorScheme) var colorScheme
-    
-    // Computed property for the background color based on the color scheme
-    var backgroundColor: Color
-    {
-        colorScheme == .dark ? Color(hex: "222222") : Color.white
-    }
     
     var body: some View
     {
@@ -53,7 +45,7 @@ struct AudioCell: View
             }
             .aspectRatio(1.66, contentMode: .fit)
             .background(GeometryReader { geometry in
-                backgroundColor
+                globalColors.cellBackground
     //                .border(.green)
                     .preference(key: CellSizeKey.self, value: geometry.size.width)
             })
@@ -93,10 +85,12 @@ struct AudioCell: View
             AudioStage()
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.light)
+                .environmentObject(GlobalColors(colorScheme: .light))
             
             AudioStage()
                 .previewInterfaceOrientation(.landscapeRight)
                 .preferredColorScheme(.dark)
+                .environmentObject(GlobalColors(colorScheme: .dark))
         }
     }
 }
@@ -209,7 +203,7 @@ struct CellBorder: View, Animatable
     // Style settings
     var lineWidth: CGFloat = 2
     var cornerRadius: CGFloat = 12
-    var color: Color = .blue
+    var color: Color
     
     // The starting angle of the fill
     var startAngle: Angle = .degrees(-90)
@@ -266,7 +260,7 @@ struct OuterCellBorder: View, Animatable
     // Style settings
     var lineWidth: CGFloat = 4
     var cornerRadius: CGFloat = 12
-    var color: Color = .blue
+    var color: Color
     
     // The starting angle of the fill
     var startAngle: Angle = .degrees(-90)
@@ -327,6 +321,7 @@ struct CellSizeKey: PreferenceKey
     }
 }
 
+
 struct StemHeightKey: PreferenceKey
 {
     typealias Value = [Int: CGFloat]
@@ -334,51 +329,5 @@ struct StemHeightKey: PreferenceKey
     
     static func reduce(value: inout [Int : CGFloat], nextValue: () -> [Int : CGFloat]) {
         value.merge(nextValue(), uniquingKeysWith: { $1 })
-    }
-}
-
-    
-
-// Extension to create a Color from a hex string.
-extension Color
-{
-    private static var colorCache: [String: Color] = [:]
-    
-    init(hex: String)
-    {
-        // Check cache first
-        if let cached = Color.colorCache[hex] {
-            self = cached
-            return
-        }
-        
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        
-        switch hex.count
-        {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
-        }
-        
-        let color = Color(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
-        )
-        
-        // Cache the result
-        Color.colorCache[hex] = color
-        self = color
     }
 }
