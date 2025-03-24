@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-let globalSpacing = 16.0
-
 struct AudioStage: View
 {
     @Environment(\.colorScheme) var colorScheme
@@ -54,7 +52,7 @@ struct AudioStage: View
             let columnCount: Int = isPhone ? (isLandscape ? 5 : 4) : (isLandscape ? 10 : 5)
 //            let columnCount = Int(windowWidth / 115)
             
-            let globalSpacing: CGFloat = windowWidth / CGFloat(columnCount) * 0.1
+            let gridSpacing: CGFloat = windowWidth / CGFloat(columnCount) * 0.1
             
             VStack (spacing: 0)
             {
@@ -69,7 +67,7 @@ struct AudioStage: View
                 // Body Section
                 ScrollView
                 {
-                    Grid(alignment: .center, horizontalSpacing: globalSpacing, verticalSpacing: globalSpacing)
+                    Grid(alignment: .center, horizontalSpacing: gridSpacing, verticalSpacing: gridSpacing)
                     {
                         ForEach(Array(gridModel.cells.chunked(into: columnCount).enumerated()), id: \.offset) { index, row in
                             GridRow {
@@ -86,7 +84,7 @@ struct AudioStage: View
                             }
                         }
                     }
-                    .padding(globalSpacing)
+                    .padding(gridSpacing)
                     .drawingGroup()
                     .background(GeometryReader { geometry in
                         Color.clear

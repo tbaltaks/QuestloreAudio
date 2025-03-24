@@ -15,6 +15,7 @@ struct Toolbar: View
     
     @State var fadeInButtonExpanded: Bool = false
     @State var selectedFadeInIndex = 1
+    
     @State var fadeOutButtonExpanded: Bool = false
     @State var selectedFadeOutIndex = 1
     
@@ -26,12 +27,13 @@ struct Toolbar: View
             
             DropDownMenu(
                 options: [
-                    "0.6",
-                    "3.2",
-                    "5.8",
+                    0.6,
+                    3.2,
+                    5.8,
                 ],
                 selectedOptionIndex: $selectedFadeInIndex,
-                showDropdown: $fadeInButtonExpanded
+                showDropdown: $fadeInButtonExpanded,
+                buttonHeight: height * 0.6
             )
             
             Spacer(minLength: 10)
@@ -46,12 +48,13 @@ struct Toolbar: View
             
             DropDownMenu(
                 options: [
-                    "0.6",
-                    "3.2",
-                    "5.8",
+                    0.6,
+                    3.2,
+                    5.8,
                 ],
                 selectedOptionIndex: $selectedFadeOutIndex,
-                showDropdown: $fadeOutButtonExpanded
+                showDropdown: $fadeOutButtonExpanded,
+                buttonHeight: height * 0.6
             )
             
             Spacer(minLength: 10)
@@ -80,17 +83,15 @@ struct Toolbar: View
 }
 
 
-struct DropDownMenu: View
+struct DropDownMenu<T: CustomStringConvertible>: View
 {
-    let options: [String]
-
-    var menuWidth: CGFloat = 80
-    var buttonHeight: CGFloat = 36
-
+    let options: [T]
+    
     @Binding  var selectedOptionIndex: Int
     @Binding  var showDropdown: Bool
 
-    @State  private  var scrollPosition: Int?
+    var menuWidth: CGFloat = 60
+    var buttonHeight: CGFloat = 36
 
     var body: some  View
     {
@@ -98,52 +99,56 @@ struct DropDownMenu: View
         {
             VStack(spacing: 0)
             {
-                // selected item
                 Button(
                     action: {
-                        withAnimation {
+                        withAnimation(.easeInOut(duration: 0.24)) {
                             showDropdown.toggle()
                         }
                     }
                 ){
-                    Text(options[selectedOptionIndex])
+                    Text(options[selectedOptionIndex].description)
                 }
                 .frame(width: menuWidth, height: buttonHeight)
 
-
-                // selection menu
                 if (showDropdown)
                 {
+                    Rectangle()
+                        .fill(.black.opacity(0.12))
+                        .frame(width: menuWidth, height: 3)
+                        .padding(.bottom, 6)
                     
-                    
-                    LazyVStack
+                    VStack (spacing: 2)
                     {
                         ForEach(0..<options.count, id: \.self)
                         { index in
                             Button(
                                 action: {
                                     selectedOptionIndex = index
-                                    withAnimation {
+                                    withAnimation(.easeInOut(duration: 0.24)) {
                                         showDropdown.toggle()
                                     }
                                 }
                             ){
                                 HStack
                                 {
-                                    Text(options[index])
+                                    Text(options[index].description)
                                         .foregroundColor(index == selectedOptionIndex ? .black : .white)
                                 }
                             }
                             .frame(width: menuWidth, height: buttonHeight)
-
+                            
+                            Rectangle()
+                                .fill(.black.opacity(0.18))
+                                .frame(width: menuWidth * 0.72, height: 1)
                         }
                     }
                 }
             }
             .foregroundStyle(Color.white)
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color.gray))
+            .background(.gray)
+            .cornerRadius(menuWidth * 0.2)
         }
         .frame(width: menuWidth, height: buttonHeight, alignment: .top)
-        .zIndex(100)
+        .zIndex(101)
     }
 }
