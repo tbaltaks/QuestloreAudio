@@ -37,23 +37,33 @@ struct AudioStage: View
     {
         gridModel = AudioCellGridModel(cellDataArray: AudioCellGridData.allCellData)
     }
-
-//    // MARK: Grid Layout
-//    let columns = Array(repeating: GridItem(.flexible(), spacing: globalSpacing), count: 10)
     
     var body: some View
     {
         GeometryReader
         { geometry in
             
-            let windowWidth = geometry.size.width
-            let windowHeight = geometry.size.height
-            let isLandscape = windowWidth > windowHeight
+            let windowWidth = geometry.size.width + geometry.safeAreaInsets.leading + geometry.safeAreaInsets.trailing
+            let windowHeight = geometry.size.height + geometry.safeAreaInsets.top + geometry.safeAreaInsets.bottom
+            
+            let isLandscape: Bool = windowWidth > windowHeight
+//            let probablyHasBlackBar: Bool = isLandscape
+//            ? geometry.safeAreaInsets.leading > 40 || geometry.safeAreaInsets.trailing > 40
+//            : geometry.safeAreaInsets.top > 40
+            
+            let columnCount: Int = isPhone ? (isLandscape ? 5 : 4) : (isLandscape ? 10 : 5)
+//            let columnCount = Int(windowWidth / 115)
+            
+            let globalSpacing: CGFloat = windowWidth / CGFloat(columnCount) * 0.1
             
             VStack (spacing: 0)
             {
                 // Toolbar Section
-                Toolbar(height: toolbarHeight, bottomOffset: isPhone ? 8 : 0, color: toolbarBackground)
+                Toolbar(
+                    height: toolbarHeight + (isLandscape ? 0 : windowHeight * 0.01),
+                    bottomOffset: isLandscape ? 0 : (isPhone ? 8 : 0),
+                    color: toolbarBackground
+                )
 //                .border(.red)
                 
                 // Body Section
@@ -61,8 +71,6 @@ struct AudioStage: View
                 {
                     Grid(alignment: .center, horizontalSpacing: globalSpacing, verticalSpacing: globalSpacing)
                     {
-                        let columnCount = Int(windowWidth / 120)
-                        
                         ForEach(Array(gridModel.cells.chunked(into: columnCount).enumerated()), id: \.offset) { index, row in
                             GridRow {
                                 ForEach(row) { cellModel in
@@ -90,7 +98,7 @@ struct AudioStage: View
                 .scrollDisabled(gridHeight + toolbarHeight < windowHeight + 10)
 //                .border(.blue)
             }
-            .frame(width: windowWidth, height: windowHeight, alignment: .top)
+            .edgesIgnoringSafeArea(computeSafeEdges(isPhone, isLandscape))
             .background(sceneBackground)
             .onPreferenceChange(ContentHeightKey.self) { height in
                 gridHeight = height
@@ -101,9 +109,20 @@ struct AudioStage: View
                 gridModel.objectWillChange.send()
             }
         }
-//        .border(.pink)
-//        .edgesIgnoringSafeArea(isPhone ? .all.subtracting(.top) : .all)
-        
+    }
+    
+    
+    func computeSafeEdges(_ isPhone: Bool, _ isLandscape: Bool) -> Edge.Set
+    {
+        if isLandscape {
+            return isPhone
+            ? .all.subtracting(.horizontal)
+            : .all
+        } else {
+            return isPhone
+            ? .all.subtracting(.top)
+            : .all
+        }
     }
     
     
