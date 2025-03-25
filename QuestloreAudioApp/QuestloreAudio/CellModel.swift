@@ -171,19 +171,11 @@ class AudioCellGridModel: ObservableObject
     }
     
     
-    struct SceneView_Previews: PreviewProvider
+    struct Previews: PreviewProvider
     {
         static var previews: some View
         {
-            AudioStage()
-                .previewInterfaceOrientation(.landscapeRight)
-                .preferredColorScheme(.light)
-                .environmentObject(GlobalColors(colorScheme: .light))
-            
-            AudioStage()
-                .previewInterfaceOrientation(.landscapeRight)
-                .preferredColorScheme(.dark)
-                .environmentObject(GlobalColors(colorScheme: .dark))
+            App_Previews.previews
         }
     }
 }

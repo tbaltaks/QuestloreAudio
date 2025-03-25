@@ -78,19 +78,11 @@ struct AudioCell: View
     }
     
     
-    struct SceneView_Previews: PreviewProvider
+    struct Previews: PreviewProvider
     {
         static var previews: some View
         {
-            AudioStage()
-                .previewInterfaceOrientation(.landscapeRight)
-                .preferredColorScheme(.light)
-                .environmentObject(GlobalColors(colorScheme: .light))
-            
-            AudioStage()
-                .previewInterfaceOrientation(.landscapeRight)
-                .preferredColorScheme(.dark)
-                .environmentObject(GlobalColors(colorScheme: .dark))
+            App_Previews.previews
         }
     }
 }
@@ -309,25 +301,5 @@ struct OuterCellBorder: View, Animatable
         .mask(RoundedRectangle(cornerRadius: cornerRadius)
                 .stroke(lineWidth: lineWidth)
         )
-    }
-}
-
-
-struct CellSizeKey: PreferenceKey
-{
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value += nextValue()
-    }
-}
-
-
-struct StemHeightKey: PreferenceKey
-{
-    typealias Value = [Int: CGFloat]
-    static var defaultValue: [Int: CGFloat] = [:]
-    
-    static func reduce(value: inout [Int : CGFloat], nextValue: () -> [Int : CGFloat]) {
-        value.merge(nextValue(), uniquingKeysWith: { $1 })
     }
 }

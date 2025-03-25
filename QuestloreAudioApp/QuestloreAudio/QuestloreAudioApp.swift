@@ -12,6 +12,7 @@ struct QuestloreAudioApp: App
 {
     @Environment(\.colorScheme) var systemColorScheme
     @StateObject private var globalColors = GlobalColors(colorScheme: .light)
+    @StateObject private var audioSettings = AudioSettings.shared
     
     var body: some Scene
     {
@@ -19,6 +20,7 @@ struct QuestloreAudioApp: App
             AudioStage()
                 .persistentSystemOverlays(.hidden)
                 .environmentObject(globalColors)
+                .environmentObject(audioSettings)
                 .onAppear {
                     globalColors.colorScheme = systemColorScheme
                 }
@@ -27,21 +29,23 @@ struct QuestloreAudioApp: App
                 }
         }
     }
-    
-    
-    struct SceneView_Previews: PreviewProvider
+}
+
+
+struct App_Previews: PreviewProvider
+{
+    static var previews: some View
     {
-        static var previews: some View
-        {
-            AudioStage()
-                .previewInterfaceOrientation(.landscapeRight)
-                .preferredColorScheme(.light)
-                .environmentObject(GlobalColors(colorScheme: .light))
-            
-            AudioStage()
-                .previewInterfaceOrientation(.landscapeRight)
-                .preferredColorScheme(.dark)
-                .environmentObject(GlobalColors(colorScheme: .dark))
-        }
+        AudioStage()
+            .previewInterfaceOrientation(.landscapeRight)
+            .preferredColorScheme(.light)
+            .environmentObject(GlobalColors(colorScheme: .light))
+            .environmentObject(AudioSettings.shared)
+        
+        AudioStage()
+            .previewInterfaceOrientation(.landscapeRight)
+            .preferredColorScheme(.dark)
+            .environmentObject(GlobalColors(colorScheme: .dark))
+            .environmentObject(AudioSettings.shared)
     }
 }

@@ -9,11 +9,16 @@ import SwiftUI
 
 struct AudioStage: View
 {
+//    @EnvironmentObject var windowSize: WindowSize
     @EnvironmentObject var globalColors: GlobalColors
     @ObservedObject var gridModel: AudioCellGridModel
     
+    @State private var windowSize: CGSize = CGSize(width: 0, height: 0)
     @State private var toolbarHeight: CGFloat = 46
     @State private var gridHeight: CGFloat = 0
+    
+    @State var fadeInButtonExpanded: Bool = false
+    @State var fadeOutButtonExpanded: Bool = false
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -33,59 +38,80 @@ struct AudioStage: View
         GeometryReader
         { geometry in
             
-            let windowWidth = geometry.size.width + geometry.safeAreaInsets.leading + geometry.safeAreaInsets.trailing
-            let windowHeight = geometry.size.height + geometry.safeAreaInsets.top + geometry.safeAreaInsets.bottom
+            let fullWindowWidth = geometry.size.width + geometry.safeAreaInsets.leading + geometry.safeAreaInsets.trailing
+            let fullWindowHeight = geometry.size.height + geometry.safeAreaInsets.top + geometry.safeAreaInsets.bottom
             
-            let isLandscape: Bool = windowWidth > windowHeight
+            let isLandscape: Bool = fullWindowWidth > fullWindowHeight
 //            let probablyHasBlackBar: Bool = isLandscape
 //            ? geometry.safeAreaInsets.leading > 40 || geometry.safeAreaInsets.trailing > 40
 //            : geometry.safeAreaInsets.top > 40
             
+            let windowWidth = fullWindowWidth - (isLandscape ? (geometry.safeAreaInsets.leading + geometry.safeAreaInsets.trailing) : 0)
+            let windowHeight = fullWindowHeight - (isPhone ? geometry.safeAreaInsets.top : 0)
+            
             let columnCount: Int = isPhone ? (isLandscape ? 5 : 4) : (isLandscape ? 10 : 5)
 //            let columnCount = Int(windowWidth / 115)
-            
             let gridSpacing: CGFloat = windowWidth / CGFloat(columnCount) * 0.1
             
             VStack (spacing: 0)
             {
                 // Toolbar Section
                 Toolbar(
+                    fadeInButtonExpanded: $fadeInButtonExpanded,
+                    fadeOutButtonExpanded: $fadeOutButtonExpanded,
                     height: toolbarHeight + (isLandscape ? 0 : windowHeight * 0.01),
                     bottomOffset: isLandscape ? 0 : (isPhone ? 8 : 0)
                 )
 //                .border(.red)
                 
-                // Body Section
-                ScrollView
+                ZStack
                 {
-                    Grid(alignment: .center, horizontalSpacing: gridSpacing, verticalSpacing: gridSpacing)
+                    // Body Section
+                    ScrollView
                     {
-                        ForEach(Array(gridModel.cells.chunked(into: columnCount).enumerated()), id: \.offset) { index, row in
-                            GridRow {
-                                ForEach(row) { cellModel in
-                                    AudioCell(
-                                        cellModel: cellModel,
-                                        onToggle: { gridModel.ToggleCell(cellModel) },
-                                        onSoloActioned: { gridModel.SoloCellActioned(cellModel) },
-                                        onSoloCancelled: { gridModel.SoloCellCancelled(cellModel) },
-                                        onSolo: { gridModel.SoloCell(cellModel) }
-                                    )
-//                                    .border(.purple)
+                        Grid(alignment: .center, horizontalSpacing: gridSpacing, verticalSpacing: gridSpacing)
+                        {
+                            ForEach(Array(gridModel.cells.chunked(into: columnCount).enumerated()), id: \.offset) { index, row in
+                                GridRow {
+                                    ForEach(row) { cellModel in
+                                        AudioCell(
+                                            cellModel: cellModel,
+                                            onToggle: { gridModel.ToggleCell(cellModel) },
+                                            onSoloActioned: { gridModel.SoloCellActioned(cellModel) },
+                                            onSoloCancelled: { gridModel.SoloCellCancelled(cellModel) },
+                                            onSolo: { gridModel.SoloCell(cellModel) }
+                                        )
+    //                                    .border(.purple)
+                                    }
                                 }
                             }
                         }
+                        .padding(gridSpacing)
+                        .drawingGroup()
+                        .background(GeometryReader { geometry in
+                            Color.clear
+    //                            .border(.green)
+                                .preference(key: ContentHeightKey.self, value: geometry.size.height)
+                        })
+    //                    .border(.orange)
                     }
-                    .padding(gridSpacing)
-                    .drawingGroup()
-                    .background(GeometryReader { geometry in
-                        Color.clear
-//                            .border(.green)
-                            .preference(key: ContentHeightKey.self, value: geometry.size.height)
-                    })
-//                    .border(.orange)
+                    .scrollDisabled(gridHeight + toolbarHeight < windowHeight + 10)
+    //                .border(.blue)
+                    
+                    // Dismissal Overlay
+                    if fadeInButtonExpanded || fadeOutButtonExpanded
+                    {
+                        DismissalOverlay(
+                            width: windowWidth,
+                            height: windowHeight,
+                            action: {
+                                fadeInButtonExpanded = false
+                                fadeOutButtonExpanded = false
+                            }
+                        )
+//                        .border(.mint)
+                    }
                 }
-                .scrollDisabled(gridHeight + toolbarHeight < windowHeight + 10)
-//                .border(.blue)
             }
             .edgesIgnoringSafeArea(computeSafeEdges(isPhone, isLandscape))
             .background(globalColors.sceneBackground)
@@ -96,6 +122,16 @@ struct AudioStage: View
             .onChange(of: gridModel.cells) { _ in
                 // Force layout update when cells change
                 gridModel.objectWillChange.send()
+            }
+            .onChange(of: windowWidth) { width in
+                windowSize.width = width
+            }
+            .onChange(of: windowHeight) { height in
+                windowSize.height = height
+            }
+            .onAppear {
+                windowSize.width = windowWidth
+                windowSize.height = windowHeight
             }
         }
     }
@@ -115,29 +151,30 @@ struct AudioStage: View
     }
     
     
-    struct SceneView_Previews: PreviewProvider
+    struct Previews: PreviewProvider
     {
         static var previews: some View
         {
-            AudioStage()
-                .previewInterfaceOrientation(.landscapeRight)
-                .preferredColorScheme(.light)
-                .environmentObject(GlobalColors(colorScheme: .light))
-            
-            AudioStage()
-                .previewInterfaceOrientation(.landscapeRight)
-                .preferredColorScheme(.dark)
-                .environmentObject(GlobalColors(colorScheme: .dark))
+            App_Previews.previews
         }
     }
 }
 
 
-struct ContentHeightKey: PreferenceKey
+struct DismissalOverlay: View
 {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value += nextValue()
+    var width: CGFloat = .infinity
+    var height: CGFloat = .infinity
+    var action: () -> Void
+    
+    var body: some View
+    {
+        Color.clear
+            .contentShape(Rectangle())
+            .frame(width: width, height: height)
+            .onTapGesture {
+                action()
+            }
     }
 }
                                 

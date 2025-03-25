@@ -10,79 +10,91 @@ import SwiftUI
 struct Toolbar: View
 {
     @EnvironmentObject var globalColors: GlobalColors
+    @EnvironmentObject var audioSettings: AudioSettings
+    
+    @Binding var fadeInButtonExpanded: Bool
+    @Binding var fadeOutButtonExpanded: Bool
     
     var height: CGFloat
     var bottomOffset: CGFloat
     
-    @State var fadeInButtonExpanded: Bool = false
-    @State var fadeInOptions: [TimeInterval] = [0.6, 3.2, 5.8]
-    @State var selectedFadeInIndex = 1
-    
-    @State var fadeOutButtonExpanded: Bool = false
-    @State var fadeOutOptions: [TimeInterval] = [0.6, 3.2, 5.8]
-    @State var selectedFadeOutIndex = 1
-    
     var body: some View
     {
-        HStack
+        ZStack
         {
-            let fadeButtonHeight = height * 0.6
+            if fadeInButtonExpanded || fadeOutButtonExpanded
+            {
+                DismissalOverlay(
+                    action: {
+                        fadeInButtonExpanded = false
+                        fadeOutButtonExpanded = false
+                    }
+                )
+//                .border(.indigo)
+            }
             
-            Spacer(minLength: 10)
-            
-            DropDownMenu(
-                options: fadeInOptions,
-                selectedOptionIndex: $selectedFadeInIndex,
-                showDropdown: $fadeInButtonExpanded,
-                buttonHeight: min(fadeButtonHeight, 38),
-                backgroundColor: globalColors.toolbarPrimary,
-                foregroundColor: globalColors.toolbarForeground,
-                dropDownColor: globalColors.dropDownBackground.opacity(0.2)
-            )
-            
-            Spacer(minLength: 10)
-            
-            Image("QLAudioLogo")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(height: height * 0.8)
-                .colorMultiply(globalColors.toolbarPrimary)
-            
-            Spacer(minLength: 10)
-            
-            DropDownMenu(
-                options: fadeOutOptions,
-                selectedOptionIndex: $selectedFadeOutIndex,
-                showDropdown: $fadeOutButtonExpanded,
-                buttonHeight: min(fadeButtonHeight, 38),
-                backgroundColor: globalColors.toolbarPrimary,
-                foregroundColor: globalColors.toolbarForeground,
-                dropDownColor: globalColors.dropDownBackground.opacity(0.2)
-            )
-            
-            Spacer(minLength: 10)
+            HStack
+            {
+                let fadeButtonHeight = height * 0.6
+                
+                Spacer(minLength: 10)
+                
+                DropDownMenu(
+                    options: audioSettings.fadeInOptions,
+                    selectedOptionIndex: $audioSettings.selectedFadeInIndex,
+                    showDropdown: $fadeInButtonExpanded,
+                    height: min(fadeButtonHeight, 38),
+                    backgroundColor: globalColors.toolbarPrimary,
+                    foregroundColor: globalColors.toolbarForeground,
+                    dropDownColor: globalColors.dropDownBackground.opacity(0.2),
+                    dismissAction: { fadeOutButtonExpanded = false }
+                )
+                
+                Spacer(minLength: 10)
+                
+                Image("QLAudioLogo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: height * 0.8)
+                    .colorMultiply(globalColors.toolbarPrimary)
+                    .allowsHitTesting(false)
+                
+                Spacer(minLength: 10)
+                
+                DropDownMenu(
+                    options: audioSettings.fadeOutOptions,
+                    selectedOptionIndex: $audioSettings.selectedFadeOutIndex,
+                    showDropdown: $fadeOutButtonExpanded,
+                    height: min(fadeButtonHeight, 38),
+                    backgroundColor: globalColors.toolbarPrimary,
+                    foregroundColor: globalColors.toolbarForeground,
+                    dropDownColor: globalColors.dropDownBackground.opacity(0.2),
+                    dismissAction: { fadeInButtonExpanded = false }
+                )
+                
+                Spacer(minLength: 10)
+            }
+            .frame(height: height)
+            .padding(.bottom, bottomOffset)
+//            .border(.mint)
         }
-        .zIndex(100)
-        .frame(height: height)
-        .padding(.bottom, bottomOffset)
+        .zIndex(10)
         .background(globalColors.toolbarBackground)
 //        .border(.red)
+        .onChange(of: audioSettings.selectedFadeInIndex) { _ in
+            AudioManager.shared.fadeInDuration = audioSettings.currentFadeInTime
+        }
+        .onChange(of: audioSettings.selectedFadeOutIndex) { _ in
+            AudioManager.shared.fadeOutDuration = audioSettings.currentFadeOutTime
+        }
     }
     
     
-    struct SceneView_Previews: PreviewProvider
+    struct Previews: PreviewProvider
     {
         static var previews: some View
         {
-            AudioStage()
-                .previewInterfaceOrientation(.landscapeRight)
-                .preferredColorScheme(.light)
-                .environmentObject(GlobalColors(colorScheme: .light))
-            
-            AudioStage()
-                .previewInterfaceOrientation(.landscapeRight)
-                .preferredColorScheme(.dark)
-                .environmentObject(GlobalColors(colorScheme: .dark))
+            App_Previews.previews
         }
     }
 }
@@ -92,19 +104,20 @@ struct DropDownMenu<T: CustomStringConvertible>: View
 {
     let options: [T]
     
-    @Binding  var selectedOptionIndex: Int
-    @Binding  var showDropdown: Bool
+    @Binding var selectedOptionIndex: Int
+    @Binding var showDropdown: Bool
 
-    var menuWidth: CGFloat = 60
-    var buttonHeight: CGFloat = 36
+    var width: CGFloat = 60
+    var height: CGFloat = 36
     var backgroundColor: Color = .secondary
     var foregroundColor: Color = .primary
     var dropDownColor: Color = .black.opacity(0.1)
     var selectedColor: Color = .primary
+    var dismissAction: () -> Void = {}
 
     var body: some  View
     {
-        let cornerRadius = menuWidth * 0.2
+        let cornerRadius: CGFloat = 12.0
         
         VStack
         {
@@ -112,14 +125,13 @@ struct DropDownMenu<T: CustomStringConvertible>: View
             {
                 Button(
                     action: {
-                        withAnimation(.easeInOut(duration: 0.24)) {
-                            showDropdown.toggle()
-                        }
+                        showDropdown.toggle()
+                        dismissAction()
                     }
                 ){
                     Text(options[selectedOptionIndex].description)
                 }
-                .frame(width: menuWidth, height: buttonHeight)
+                .frame(width: width, height: height)
                 .contentShape(RoundedRectangle(cornerRadius: cornerRadius))
 
                 if showDropdown
@@ -131,9 +143,8 @@ struct DropDownMenu<T: CustomStringConvertible>: View
                             Button(
                                 action: {
                                     selectedOptionIndex = index
-                                    withAnimation(.easeInOut(duration: 0.24)) {
-                                        showDropdown.toggle()
-                                    }
+                                    showDropdown.toggle()
+                                    dismissAction()
                                 }
                             ){
                                 HStack
@@ -142,13 +153,13 @@ struct DropDownMenu<T: CustomStringConvertible>: View
                                         .foregroundColor(index == selectedOptionIndex ? selectedColor : foregroundColor)
                                 }
                             }
-                            .frame(width: menuWidth, height: buttonHeight)
+                            .frame(width: width, height: height)
                             
                             let lastIndex = options.count - 1
                             if index < lastIndex {
                                 Rectangle()
                                     .fill(foregroundColor.opacity(0.5))
-                                    .frame(width: menuWidth * 0.72, height: 1)
+                                    .frame(width: width * 0.72, height: 1)
                             }
                         }
                     }
@@ -159,7 +170,8 @@ struct DropDownMenu<T: CustomStringConvertible>: View
             .background(backgroundColor.opacity(showDropdown ? 0.74 : 1))
             .cornerRadius(cornerRadius)
         }
-        .frame(width: menuWidth, height: buttonHeight, alignment: .top)
-        .zIndex(101)
+        .zIndex(100)
+        .animation(.easeInOut(duration: 0.24), value: showDropdown)
+        .frame(width: width, height: height, alignment: .top)
     }
 }

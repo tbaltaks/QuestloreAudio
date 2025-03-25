@@ -5,11 +5,31 @@
 //  Created by Tom Baltaks on 7/3/2025.
 //
 
-import Foundation
+import SwiftUI
 import AVFoundation
-import QuartzCore // For CACurrentMediaTime
-import Combine
 import Accelerate
+import QuartzCore // For CACurrentMediaTime
+import Combine // For AnyCancellable Timer
+
+
+class AudioSettings: ObservableObject
+{
+    static let shared = AudioSettings()
+    
+    @Published var fadeInOptions: [TimeInterval] = [3.0, 6.8, 10.0]
+    @Published var fadeOutOptions: [TimeInterval] = [3.0, 6.8, 10.0]
+    @Published var selectedFadeInIndex = 1
+    @Published var selectedFadeOutIndex = 2
+    
+    var currentFadeInTime: TimeInterval {
+        fadeInOptions[selectedFadeInIndex]
+    }
+    
+    var currentFadeOutTime: TimeInterval {
+        fadeOutOptions[selectedFadeOutIndex]
+    }
+}
+
 
 // Wrap an AVAudioPlayer along with its active fade timer
 class AudioPlaybackHandler
@@ -27,6 +47,7 @@ class AudioPlaybackHandler
     }
 }
 
+
 class AudioManager: ObservableObject
 {
     static let shared = AudioManager()
@@ -35,8 +56,8 @@ class AudioManager: ObservableObject
     let numberOfStems: Int = 16
 
     // Fade durations (in seconds)
-    let fadeInDuration: TimeInterval = 4.0
-    let fadeOutDuration: TimeInterval = 4.0
+    var fadeInDuration: TimeInterval = 4.0
+    var fadeOutDuration: TimeInterval = 4.0
 
     // Dictionaries storing handler, audio files, and audio data (keyed by cell ID)
     var handlers: [UUID: AudioPlaybackHandler] = [:]
@@ -94,7 +115,7 @@ class AudioManager: ObservableObject
         // If already playing, simply fade in.
         if let handler = handlers[cell.id] {
             handler.fadeTimer?.invalidate()
-            fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
+            fade(handler: handler, toVolume: 1.0, duration: self.fadeInDuration)
             return
         }
         
@@ -118,7 +139,7 @@ class AudioManager: ObservableObject
             let audioFile = try AVAudioFile(forReading: url)
             audioFiles[cell.id] = audioFile
             
-            fade(handler: handler, toVolume: 1.0, duration: fadeInDuration)
+            fade(handler: handler, toVolume: 1.0, duration: self.fadeInDuration)
         }
         catch {
             print("Error playing audio: \(error)")
@@ -132,7 +153,7 @@ class AudioManager: ObservableObject
         }
         
         handler.fadeTimer?.invalidate()
-        fade(handler: handler, toVolume: 0.0, duration: fadeOutDuration) {
+        fade(handler: handler, toVolume: 0.0, duration: self.fadeOutDuration) {
             handler.player.stop()
             self.handlers.removeValue(forKey: cell.id)
             self.audioFiles.removeValue(forKey: cell.id)
@@ -258,5 +279,14 @@ class AudioManager: ObservableObject
         }
         
         vDSP_destroy_fftsetup(fftSetup)
+    }
+    
+    
+    struct Previews: PreviewProvider
+    {
+        static var previews: some View
+        {
+            App_Previews.previews
+        }
     }
 }

@@ -10,6 +10,7 @@
 		E212A7BF2D891FD800E564BF /* ToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E212A7BE2D891FD800E564BF /* ToolbarView.swift */; };
 		E212A7C12D89272600E564BF /* CellGridData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E212A7C02D89272600E564BF /* CellGridData.swift */; };
 		E22E63C52D91BDC00048EFD6 /* GlobalColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = E22E63C42D91BDC00048EFD6 /* GlobalColors.swift */; };
+		E22E63C72D9265930048EFD6 /* PreferenceKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = E22E63C62D9265930048EFD6 /* PreferenceKeys.swift */; };
 		E2680F032D77F1640078843D /* QuestloreAudioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2680F022D77F1640078843D /* QuestloreAudioApp.swift */; };
 		E2680F052D77F1640078843D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2680F042D77F1640078843D /* ContentView.swift */; };
 		E2680F072D77F1660078843D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E2680F062D77F1660078843D /* Assets.xcassets */; };
@@ -58,6 +59,7 @@
 		E212A7BE2D891FD800E564BF /* ToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarView.swift; sourceTree = "<group>"; };
 		E212A7C02D89272600E564BF /* CellGridData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellGridData.swift; sourceTree = "<group>"; };
 		E22E63C42D91BDC00048EFD6 /* GlobalColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalColors.swift; sourceTree = "<group>"; };
+		E22E63C62D9265930048EFD6 /* PreferenceKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceKeys.swift; sourceTree = "<group>"; };
 		E2680EFF2D77F1640078843D /* QuestloreAudio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuestloreAudio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2680F022D77F1640078843D /* QuestloreAudioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestloreAudioApp.swift; sourceTree = "<group>"; };
 		E2680F042D77F1640078843D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -145,6 +147,7 @@
 				E2680F022D77F1640078843D /* QuestloreAudioApp.swift */,
 				E2DE7CBF2D798C6D00E69B50 /* AudioStage.swift */,
 				E212A7BE2D891FD800E564BF /* ToolbarView.swift */,
+				E22E63C62D9265930048EFD6 /* PreferenceKeys.swift */,
 				E2E682C42D9040B3004A9B0C /* Test.swift */,
 				E2DE7CC12D798E1800E69B50 /* CellView.swift */,
 				E2E71E1D2D8EE277009DE5A3 /* ScrollTest.swift */,
@@ -364,6 +367,7 @@
 				E22E63C52D91BDC00048EFD6 /* GlobalColors.swift in Sources */,
 				E212A7BF2D891FD800E564BF /* ToolbarView.swift in Sources */,
 				E2680F052D77F1640078843D /* ContentView.swift in Sources */,
+				E22E63C72D9265930048EFD6 /* PreferenceKeys.swift in Sources */,
 				E2E71E1C2D8ECE83009DE5A3 /* DragButton.swift in Sources */,
 				E2680F032D77F1640078843D /* QuestloreAudioApp.swift in Sources */,
 				E2E682C52D9040B3004A9B0C /* Test.swift in Sources */,
@@ -543,7 +547,7 @@
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
@@ -583,7 +587,7 @@
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
